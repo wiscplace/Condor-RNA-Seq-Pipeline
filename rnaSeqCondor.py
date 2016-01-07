@@ -210,18 +210,32 @@ ref = { 'R64' : ( "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R
 
 def trimCondorFile():
     """
+    Step 1
     Create condor job template file to run trimmomatic.
 
     Command:
     java -Xmx6g -jar ~/bin/trimmomatic SE -phred33 -trimlog trimlog.out test.fastq.gz
     trimmed.out.fastq.gz LEADING:3 TRAILING:3 SLIDINGWINDOW:3:30 MINLEN:36
+
+    To use with condor you must know the main class.
+    extract jar archive: jar xf trimmomatic-0.30.jar
+
+    look in the META-INF/MANIFEST.MF for main class
+
+    Manifest-Version: 1.0
+    Ant-Version: Apache Ant 1.8.3
+    Created-By: 1.7.0_09-icedtea-mockbuild_2013_01_14_23_04-b00 (Oracle Corporation)
+    Main-Class: org.usadellab.trimmomatic.Trimmomatic
+
+    pass the main class in the Arguments line.    
+  
     """
     with open('trimCondor.jtf', 'w') as submit:
         submit.write( "Universe                 = java\n" )
         submit.write( "Executable               = /opt/bifxapps/Trimmomatic-0.30/trimmomatic-0.30.jar\n" )
         submit.write( "jar_files                = /opt/bifxapps/Trimmomatic-0.30/trimmomatic-0.30.jar\n" )
         submit.write( "java_vm_args             = -Xmx8g\n" )
-        submit.write( "Arguments                = SE -phred33 $(fastq) $(outfile) LEADING:3 TRAILING:3 SLIDINGWINDOW:3:30 MINLEN:36\n" )
+        submit.write( "Arguments                = org.usadellab.trimmomatic.Trimmomatic SE -phred33 $(fastq) $(outfile) LEADING:3 TRAILING:3 SLIDINGWINDOW:3:30 MINLEN:36\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = Yes\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
@@ -231,9 +245,36 @@ def trimCondorFile():
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 8000\n" )
         submit.write( "request_disk             = 400000\n" )
-        submit.write( "Queue" )
-        
+        submit.write( "Queue\n" )        
     submit.close()        
+
+def fastqcCondorFile():
+    """
+    Step 2
+    Create condor job template file to run FastQC.
+    This provides some quality control checks on trimmed sequence data.
+
+    Command:
+    /opt/bifxapps/FastQC/fastqc input.fastq
+    
+    """
+    with open('fastqcCondor.jtf', 'w') as submit: 
+        submit.write( "Universe                 = vanilla\n" )
+        submit.write( "Executable               = /opt/bifxapps/FastQC/fastqc\n" )
+        submit.write( "Arguments                = $(read)\n" )
+        submit.write( "Notification             = Never\n" )
+        submit.write( "Should_Transfer_Files    = Yes\n" )
+        submit.write( "When_To_Transfer_Output  = On_Exit\n" )
+        submit.write( "Transfer_Input_Files     = $(read)\n" )
+        submit.write( "Output			= $(outfile)\n" )
+        submit.write( "Error                    = $(job).submit.err\n" )
+        submit.write( "Log                      = $(job).submit.log\n" )
+        submit.write( "request_memory           = 20000\n" )
+        submit.write( "request_disk             = 5000000\n" )
+        submit.write( "Queue" )
+    submit.close()
+    
+
 
 def bwaCondorFile():
     """
@@ -375,6 +416,12 @@ def main():
         print("See Mike Place for problems with this script.")
         sys.exit(1)
 
+    hostname = socket.gethostname()
+    if hostname != 'scarcity-cm.glbrc.org':
+        print("Program must be run on scarcity's condor submit node.")
+        print("\tssh to scarcity-cm.glbrc.org")
+        sys.exit(1)
+
     # Get reference genome to use
     if cmdResults['REFERENCE'] == 'Y22-3' or cmdResults['REFERENCE'] == 'y22-3':
         reference = 'Y22'
@@ -392,11 +439,7 @@ def main():
         if re.search(r'.fastq',f):
             fastq.append(f)
 
-    hostname = socket.gethostname()
-    if hostname != 'scarcity-cm.glbrc.org':
-        print("Program must be run on scarcity's condor submit node.")
-        print("\tssh to scarcity-cm.glbrc.org")
-        sys.exit(1) 
+     
 
     with open('bwamem.log','w') as log:
         log.write("Running bwa mem on condor\n")
@@ -421,7 +464,8 @@ def main():
         outName = re.sub(r"fastq","trim.fastq", f )
         trimJob.add_var('outfile', outName )  
         num += 1
-        """bwaJob = Job('bwaCondor.jtf', 'job' + str(num) )      # set bwa job template file
+        """
+        bwaJob =  Job('bwaCondor.jtf', 'job' + str(num) )      # set bwa job template file
         mydag.add_job(bwaJob)   
         bwaJob.pre_skip("1")
         bwaJob.add_var('job', 'job' + str(num) )              # setup variable to substitue
@@ -431,7 +475,7 @@ def main():
         bwaJob.add_var('outfile', outName )  
         num += 1
             
-        cleanJob = Job( 'cleanSam.jtf', 'job' + str(num) )     # set up clean sam job template file
+        cleanJob =    Job( 'cleanSam.jtf', 'job' + str(num) )     # set up clean sam job template file
         cleanJob.pre_skip( "1" )
         cleanJob.add_var('job', 'job' + str(num) )
         cleanJob.add_var( 'sam', outName )
@@ -458,12 +502,12 @@ def main():
     # write trimmomatic condor_submit file
     trimCondorFile()
     # write bwa condor_submit file
-    bwaCondorFile()
+    #bwaCondorFile()
     # write clean sam condor submit file
-    cleanSamFile()
+    #cleanSamFile()
     #addReadGpSam(reference)
     
-    mydag.save('bwa_condor.dag')
+    mydag.save('MasterDagman.dsf')
      
     # clean up unnessary files
     # remove original sam file, generated w/ bwa
