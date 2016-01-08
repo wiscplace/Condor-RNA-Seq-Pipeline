@@ -234,7 +234,7 @@ def trimCondorFile():
         submit.write( "Universe                 = java\n" )
         submit.write( "Executable               = /opt/bifxapps/Trimmomatic-0.30/trimmomatic-0.30.jar\n" )
         submit.write( "jar_files                = /opt/bifxapps/Trimmomatic-0.30/trimmomatic-0.30.jar\n" )
-        submit.write( "java_vm_args             = -Xmx8g\n" )
+        submit.write( "java_vm_args             = -Xmx6g\n" )
         submit.write( "Arguments                = org.usadellab.trimmomatic.Trimmomatic SE -phred33 $(fastq) $(outfile) LEADING:3 TRAILING:3 SLIDINGWINDOW:3:30 MINLEN:36\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = Yes\n" )
@@ -245,7 +245,7 @@ def trimCondorFile():
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 8000\n" )
         submit.write( "request_disk             = 400000\n" )
-        submit.write( "Queue\n" )        
+        submit.write( "Queue\n" )
     submit.close()        
 
 def fastqcCondorFile():
@@ -381,7 +381,6 @@ def main():
         print("\t    Current Reference List:")
         print("\t\tR64-1-1 -- default equivalent to UCSC sacCer3" )
         print("\t\tY22-3   -- GLBRC assembly")
-        #print("\t\tPAN     -- Pan-genome \n")
         print("\nOutline of steps & commands used in pipeline:\n")
         print("  1) Trimmomatic ")
         print("\t/opt/bifxapps/Trimmomatic-0.30/trimmomatic-0.30.jar SE -phred33 input_fastq ")
@@ -456,26 +455,28 @@ def main():
 
     num = 1
     for f in fastq:
+        
         trimJob = Job( 'trimCondor.jtf', 'job' + str(num) )      # set trimmomatic job template file
         mydag.add_job( trimJob )
         trimJob.pre_skip("1")
         trimJob.add_var('job', 'job' + str(num) )              # setup variable to substitue
         trimJob.add_var('fastq', f )
-        outName = re.sub(r"fastq","trim.fastq", f )
-        trimJob.add_var('outfile', outName )  
+        trimName = re.sub(r"fastq","trim.fastq", f )
+        trimJob.add_var('outfile', trimName )  
         num += 1
-        """
+        
         bwaJob =  Job('bwaCondor.jtf', 'job' + str(num) )      # set bwa job template file
         mydag.add_job(bwaJob)   
         bwaJob.pre_skip("1")
         bwaJob.add_var('job', 'job' + str(num) )              # setup variable to substitue
         bwaJob.add_var('reference', ref[reference][1])
-        bwaJob.add_var('read', f )
+        bwaJob.add_var('read', trimName )
         outName = re.sub(r"fastq","sam", f )
-        bwaJob.add_var('outfile', outName )  
+        bwaJob.add_var('outfile', outName )
+        bwaJob.add_parent(trimJob)
         num += 1
             
-        cleanJob =    Job( 'cleanSam.jtf', 'job' + str(num) )     # set up clean sam job template file
+        """cleanJob =    Job( 'cleanSam.jtf', 'job' + str(num) )     # set up clean sam job template file
         cleanJob.pre_skip( "1" )
         cleanJob.add_var('job', 'job' + str(num) )
         cleanJob.add_var( 'sam', outName )
@@ -502,7 +503,7 @@ def main():
     # write trimmomatic condor_submit file
     trimCondorFile()
     # write bwa condor_submit file
-    #bwaCondorFile()
+    bwaCondorFile()
     # write clean sam condor submit file
     #cleanSamFile()
     #addReadGpSam(reference)
