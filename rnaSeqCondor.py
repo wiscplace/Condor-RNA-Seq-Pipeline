@@ -363,6 +363,24 @@ def samToBamFile():
         submit.write( "Queue" )
     submit.close()
         
+def sortSamFile():
+    """
+    Use samtools to Sort bam file, takes output from samToBamFile.
+    """
+    with open('sortSam.jtf', 'w') as submit:
+        submit.write( "Universe                 = vanilla\n" )
+        submit.write( "Executable               = /opt/bifxapps/bin/samtools\n" )
+        submit.write( "Arguments                = sort $(bam) $(out)\n" )
+        submit.write( "Notification             = Never\n" )
+        submit.write( "Should_Transfer_Files    = Yes\n" )
+        submit.write( "When_To_Transfer_Output  = On_Exit\n" )
+        submit.write( "Transfer_Input_Files     = $(bam)\n" )
+        submit.write( "Error                    = $(job).submit.err\n" )
+        submit.write( "Log                      = $(job).submit.log\n" )
+        submit.write( "request_memory           = 20000\n" )
+        submit.write( "request_disk             = 5000000\n" )
+        submit.write( "Queue" )
+    submit.close()
 
 def main():
     """
@@ -478,7 +496,7 @@ def main():
     num = 1
     for f in fastq:
         
-        trimJob = Job('trimCondor.jtf', 'job' + str(num))   # set trimmomatic job template file
+        trimJob = Job('trimCondor.jtf', 'job' + str(num))   # set trimmomatic job file
         mydag.add_job(trimJob)
         trimJob.pre_skip("1")
         trimJob.add_var('job', 'job' + str(num))             # setup variable to substitue
@@ -487,7 +505,7 @@ def main():
         trimJob.add_var('outfile', trimName)  
         num += 1   
         
-        bwaJob =  Job('bwaCondor.jtf', 'job' + str(num))     # set bwa job template file
+        bwaJob =  Job('bwaCondor.jtf', 'job' + str(num))     # set bwa job file
         mydag.add_job(bwaJob)   
         bwaJob.pre_skip("1")
         bwaJob.add_var('job', 'job' + str(num))              # setup variable to substitue
@@ -498,7 +516,7 @@ def main():
         bwaJob.add_parent(trimJob)
         num += 1
           
-        cleanJob =    Job('cleanSam.jtf', 'job' + str(num))  # set up clean sam job template file
+        cleanJob =    Job('cleanSam.jtf', 'job' + str(num))  # set up clean sam job file
         cleanJob.pre_skip("1")
         cleanJob.add_var('job', 'job' + str(num))
         cleanJob.add_var( 'sam', outName )
@@ -521,9 +539,7 @@ def main():
         mydag.add_job(readGpJob)
         num += 1
 
-        #samToBam  , sam , bam, reference , job
-        #    YPS163.100k.addGp.sam
-        samToBamJob  = Job('samToBam.jtf', 'job' + str(num))   #
+        samToBamJob  = Job('samToBam.jtf', 'job' + str(num))   # set up sam to bam job
         samToBamJob.pre_skip("1")
         samToBamJob.add_var('job', 'job' + str(num))
         samToBamName = re.sub(r"fastq", "final.sam", f)
@@ -535,6 +551,19 @@ def main():
         samToBamJob.add_parent(readGpJob)
         mydag.add_job(samToBamJob)
         num += 1
+
+        sortSamJob = Job('sortSam.jtf', 'job' + str(num))      # set up sort sam job
+        sortSamJob.pre_skip("1")
+        sortSamJob.add_var('job', 'job' + str(num))
+        sortSamJob.add_var('bam', bamName )
+        sortName = re.sub(r"bam", "sort", bamName)
+        sortSamJob.add_var('out', sortName )
+        parent = 'job' + str(num)
+        sortSamJob.add_parent(samToBamJob)
+        mydag.add_job(sortSamJob)
+        num += 1
+        
+        
         
 
     # write trimmomatic submit file
@@ -547,6 +576,8 @@ def main():
     addReadGpSam(reference)
     # write sam To Bam submit file
     samToBamFile()
+    # write sort sam submit file
+    sortSamFile()
     
     mydag.save('MasterDagman.dsf')
      
