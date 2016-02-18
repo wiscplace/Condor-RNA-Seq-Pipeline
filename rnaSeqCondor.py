@@ -273,7 +273,12 @@ def fastqcCondorFile():
         submit.write( "request_disk             = 5000000\n" )
         submit.write( "Queue" )
     submit.close()
-    
+
+def bowtie2CondorFile():
+    """
+    Create condor job template file to run bowtie2.
+    """
+    pass
 
 
 def bwaCondorFile():
@@ -339,6 +344,25 @@ def addReadGpSam(ref):
         submit.write( "Queue" )
     submit.close()  
 
+def samToBamFile():
+    """
+    Convert sam file, output of addReadGpSam(), to bam for sorting by samtools.
+    """
+    with open('samToBam.jtf', 'w') as submit:
+        submit.write( "Universe                 = vanilla\n" )
+        submit.write( "Executable               = /opt/bifxapps/bin/samtools\n" )
+        submit.write( "Arguments                = view -bS -t $(reference) -o $(bam) $(sam)\n" )
+        submit.write( "Notification             = Never\n" )
+        submit.write( "Should_Transfer_Files    = Yes\n" )
+        submit.write( "When_To_Transfer_Output  = On_Exit\n" )
+        submit.write( "Transfer_Input_Files     = $(reference),$(sam)\n" )
+        submit.write( "Error                    = $(job).submit.err\n" )
+        submit.write( "Log                      = $(job).submit.log\n" )
+        submit.write( "request_memory           = 20000\n" )
+        submit.write( "request_disk             = 5000000\n" )
+        submit.write( "Queue" )
+    submit.close()
+        
 
 def main():
     """
@@ -481,7 +505,7 @@ def main():
         cleanName = re.sub( r"fastq", "clean.sam", f)
         cleanJob.add_var( 'outfile', cleanName)
         parent = 'job' + str(num)
-        cleanJob.add_parent(bwaJob)                          # Make bwa job parent of clean sam job
+        cleanJob.add_parent(bwaJob)                           # Make bwa job parent of clean sam job
         mydag.add_job(cleanJob)
         num += 1
 
@@ -490,21 +514,39 @@ def main():
         readGpJob.add_var('job', 'job' + str(num))
         readGpJob.add_var('cleanSam', cleanName)
         readGpJob.add_var('fastq', f)
-        outfile = re.sub(r"fastq", "addGp.sam", f)
+        outfile = re.sub(r"fastq", "final.sam", f)
         readGpJob.add_var('outfile', outfile)
         parent = 'job' + str(num)
         readGpJob.add_parent(cleanJob)
         mydag.add_job(readGpJob)
         num += 1
+
+        #samToBam  , sam , bam, reference , job
+        #    YPS163.100k.addGp.sam
+        samToBamJob  = Job('samToBam.jtf', 'job' + str(num))   #
+        samToBamJob.pre_skip("1")
+        samToBamJob.add_var('job', 'job' + str(num))
+        samToBamName = re.sub(r"fastq", "final.sam", f)
+        samToBamJob.add_var('sam', samToBamName)
+        bamName      = re.sub(r"sam", "bam", samToBamName)
+        samToBamJob.add_var('bam', bamName)
+        samToBamJob.add_var('reference', ref[reference][3])
+        parent = 'job' + str(num)
+        samToBamJob.add_parent(readGpJob)
+        mydag.add_job(samToBamJob)
+        num += 1
         
 
-    # write trimmomatic condor_submit file
+    # write trimmomatic submit file
     trimCondorFile()
-    # write bwa condor_submit file
+    # write bwa submit file
     bwaCondorFile()
-    # write clean sam condor submit file
+    # write clean sam submit file
     cleanSamFile()
+    # write add read group to sam condor 
     addReadGpSam(reference)
+    # write sam To Bam submit file
+    samToBamFile()
     
     mydag.save('MasterDagman.dsf')
      
