@@ -240,7 +240,6 @@ def trimCondorFile():
         submit.write( "Should_Transfer_Files    = Yes\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(fastq)\n" )
-        submit.write( "Output                   = $(outfile)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 8000\n" )
@@ -250,23 +249,24 @@ def trimCondorFile():
 
 def fastqcCondorFile():
     """
+    NOT USED YET, need to find a way to call the executable, command
+    below does not work.
     Step 2
     Create condor job template file to run FastQC.
     This provides some quality control checks on trimmed sequence data.
 
     Command:
     /opt/bifxapps/FastQC/fastqc input.fastq
-    
     """
     with open('fastqcCondor.jtf', 'w') as submit: 
-        submit.write( "Universe                 = vanilla\n" )
+        submit.write( "Universe                 = java\n" )
         submit.write( "Executable               = /opt/bifxapps/FastQC/fastqc\n" )
         submit.write( "Arguments                = $(read)\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = Yes\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(read)\n" )
-        submit.write( "Output			= $(outfile)\n" )
+        #submit.write( "Output			= $(outfile)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 20000\n" )
@@ -310,7 +310,6 @@ def cleanSamFile():
         submit.write( "Should_Transfer_Files    = Yes\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(sam)\n" )
-        submit.write( "Output                   = $(outfile)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 8000\n" )
@@ -333,7 +332,6 @@ def addReadGpSam(ref):
         submit.write( "Should_Transfer_Files    = Yes\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(cleanSam)\n" )
-        submit.write( "Output                   = $(outfile)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 8000\n" )
@@ -456,57 +454,57 @@ def main():
     num = 1
     for f in fastq:
         
-        trimJob = Job( 'trimCondor.jtf', 'job' + str(num) )      # set trimmomatic job template file
-        mydag.add_job( trimJob )
+        trimJob = Job('trimCondor.jtf', 'job' + str(num))   # set trimmomatic job template file
+        mydag.add_job(trimJob)
         trimJob.pre_skip("1")
-        trimJob.add_var('job', 'job' + str(num) )              # setup variable to substitue
+        trimJob.add_var('job', 'job' + str(num))             # setup variable to substitue
         trimJob.add_var('fastq', f )
-        trimName = re.sub(r"fastq","trim.fastq", f )
-        trimJob.add_var('outfile', trimName )  
-        num += 1
+        trimName = re.sub(r"fastq","trim.fastq", f)
+        trimJob.add_var('outfile', trimName)  
+        num += 1   
         
-        bwaJob =  Job('bwaCondor.jtf', 'job' + str(num) )      # set bwa job template file
+        bwaJob =  Job('bwaCondor.jtf', 'job' + str(num))     # set bwa job template file
         mydag.add_job(bwaJob)   
         bwaJob.pre_skip("1")
-        bwaJob.add_var('job', 'job' + str(num) )              # setup variable to substitue
+        bwaJob.add_var('job', 'job' + str(num))              # setup variable to substitue
         bwaJob.add_var('reference', ref[reference][1])
-        bwaJob.add_var('read', trimName )
-        outName = re.sub(r"fastq","sam", f )
-        bwaJob.add_var('outfile', outName )
+        bwaJob.add_var('read', f )
+        outName = re.sub(r"fastq","sam", trimName)
+        bwaJob.add_var('outfile', outName)
         bwaJob.add_parent(trimJob)
         num += 1
-            
-        """cleanJob =    Job( 'cleanSam.jtf', 'job' + str(num) )     # set up clean sam job template file
-        cleanJob.pre_skip( "1" )
-        cleanJob.add_var('job', 'job' + str(num) )
+          
+        cleanJob =    Job('cleanSam.jtf', 'job' + str(num))  # set up clean sam job template file
+        cleanJob.pre_skip("1")
+        cleanJob.add_var('job', 'job' + str(num))
         cleanJob.add_var( 'sam', outName )
-        cleanName = re.sub( r"fastq", "clean.sam", f )
-        cleanJob.add_var( 'outfile', cleanName )
+        cleanName = re.sub( r"fastq", "clean.sam", f)
+        cleanJob.add_var( 'outfile', cleanName)
         parent = 'job' + str(num)
-        cleanJob.add_parent( bwaJob )                          # Make bwa job parent of clean sam job
+        cleanJob.add_parent(bwaJob)                          # Make bwa job parent of clean sam job
         mydag.add_job(cleanJob)
         num += 1
 
-        readGpJob = Job( 'addReadGpSam.jtf', 'job' + str(num) ) # set up AddOrReplaceReadGroups job
-        readGpJob.pre_skip( "1" )
-        readGpJob.add_var( 'job', 'job' + str(num) )
-        readGpJob.add_var( 'cleanSam', cleanName )
-        readGpJob.add_var( 'fastq', f )
-        outfile = re.sub( r"fastq", "addGp.sam", f)
-        readGpJob.add_var( 'outfile', outfile )
+        readGpJob = Job('addReadGpSam.jtf', 'job' + str(num)) # set up AddOrReplaceReadGroups job
+        readGpJob.pre_skip("1")
+        readGpJob.add_var('job', 'job' + str(num))
+        readGpJob.add_var('cleanSam', cleanName)
+        readGpJob.add_var('fastq', f)
+        outfile = re.sub(r"fastq", "addGp.sam", f)
+        readGpJob.add_var('outfile', outfile)
         parent = 'job' + str(num)
-        readGpJob.add_parent( cleanJob )
-        mydag.add_job( readGpJob )
+        readGpJob.add_parent(cleanJob)
+        mydag.add_job(readGpJob)
         num += 1
-        """
+        
 
     # write trimmomatic condor_submit file
     trimCondorFile()
     # write bwa condor_submit file
     bwaCondorFile()
     # write clean sam condor submit file
-    #cleanSamFile()
-    #addReadGpSam(reference)
+    cleanSamFile()
+    addReadGpSam(reference)
     
     mydag.save('MasterDagman.dsf')
      
