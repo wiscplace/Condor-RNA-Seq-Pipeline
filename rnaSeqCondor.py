@@ -6,6 +6,8 @@ Purpose: Implement the currently used Gasch lab RNA-Seq pipeline using condor
          dagman for job managment. This is a reimplementation of the original
          RNA-Seq pipeline (https://gitlab.wei.wisc.edu/mplace/RNA-Seq-Pipeline)
 
+         HTCondor https://research.cs.wisc.edu/htcondor/
+
 Input:  reference file, single or paired
 
     text file with a list of RNA-Seq fastq files to be processed
@@ -266,7 +268,6 @@ def fastqcCondorFile():
         submit.write( "Should_Transfer_Files    = Yes\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(read)\n" )
-        #submit.write( "Output			= $(outfile)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 20000\n" )
@@ -382,11 +383,11 @@ def sortSamFile():
         submit.write( "Queue" )
     submit.close()
 
-def indexSamFile():
+def indexBamFile():
     """
     Use samtools to index bam file, takes output from sortSamFile.
     """
-    with open('indexSam.jtf', 'w') as submit:
+    with open('indexBam.jtf', 'w') as submit:
         submit.write( "Universe                 = vanilla\n" )
         submit.write( "Executable               = /opt/bifxapps/bin/samtools\n" )
         submit.write( "Arguments                = index $(bam)\n" )
@@ -588,10 +589,14 @@ def main():
         mydag.add_job(sortSamJob)
         num += 1
 
-        indexSamJob = Job('indexSam.jtf', 'job' + str(num))     # set up index sam job
-        indexSamJob.pre_skip("1")
-        indexSamJob.add_var('job', 'job' + str(num))
-        indexSamJob.add_var('bam', sortName + '.bam' )
+        indexBamJob = Job('indexBam.jtf', 'job' + str(num))     # set up index sam job
+        indexBamJob.pre_skip("1")
+        indexBamJob.add_var('job', 'job' + str(num))
+        indexBamJob.add_var('bam', sortName + '.bam' )
+        parent = 'job' + str(num)
+        indexBamJob.add_parent(sortSamJob)
+        mydag.add_job(indexBamJob)
+        num += 1
         
         
         
@@ -608,6 +613,9 @@ def main():
     samToBamFile()
     # write sort sam submit file
     sortSamFile()
+    # write index bam submit file
+    indexBamFile()
+    
     
     mydag.save('MasterDagman.dsf')
      
