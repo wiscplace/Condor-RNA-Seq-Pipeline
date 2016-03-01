@@ -382,6 +382,31 @@ def sortSamFile():
         submit.write( "Queue" )
     submit.close()
 
+def indexSamFile():
+    """
+    Use samtools to index bam file, takes output from sortSamFile.
+    """
+    with open('indexSam.jtf', 'w') as submit:
+        submit.write( "Universe                 = vanilla\n" )
+        submit.write( "Executable               = /opt/bifxapps/bin/samtools\n" )
+        submit.write( "Arguments                = index $(bam)\n" )
+        submit.write( "Notification             = Never\n" )
+        submit.write( "Should_Transfer_Files    = Yes\n" )
+        submit.write( "When_To_Transfer_Output  = On_Exit\n" )
+        submit.write( "Transfer_Input_Files     = $(bam)\n" )
+        submit.write( "Error                    = $(job).submit.err\n" )
+        submit.write( "Log                      = $(job).submit.log\n" )
+        submit.write( "request_memory           = 20000\n" )
+        submit.write( "request_disk             = 5000000\n" )
+        submit.write( "Queue" )
+    submit.close()
+
+def bamToWigFile():
+    """
+    Create wig file for viewing alignments in mochi view
+    """
+    pass
+
 def main():
     """
     main() 
@@ -562,6 +587,11 @@ def main():
         sortSamJob.add_parent(samToBamJob)
         mydag.add_job(sortSamJob)
         num += 1
+
+        indexSamJob = Job('indexSam.jtf', 'job' + str(num))     # set up index sam job
+        indexSamJob.pre_skip("1")
+        indexSamJob.add_var('job', 'job' + str(num))
+        indexSamJob.add_var('bam', sortName + '.bam' )
         
         
         
