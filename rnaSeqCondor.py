@@ -402,6 +402,56 @@ def indexBamFile():
         submit.write( "Queue" )
     submit.close()
 
+def htSeqFile( strandedness ):
+    """
+    Call HTSeq-count to get gene counts for each sample.
+    -s parameter indicates reverse strand library construction
+    """
+    with open('htseq.jtf', 'w') as submit:
+        submit.write( "Universe                 = vanilla\n" )
+        submit.write( "Executable               = /opt/bifxapps/python/bin/htseq-count\n" )
+        if strandedness == 1:
+            submit.write( "Arguments                = -f bam -t CDS -i Parent -s reverse $(bam) $(gff)\n" )
+        else:
+            submit.write( "Arguments                = -f bam -t CDS -i Parent $(bam) $(gff)\n" )
+        submit.write( "Notification             = Never\n" )
+        submit.write( "Should_Transfer_Files    = Yes\n" )
+        submit.write( "When_To_Transfer_Output  = On_Exit\n" )
+        submit.write( "Transfer_Input_Files     = $(bam)\n" )
+        submit.write( "output                   = $(out)\n" )
+        submit.write( "Error                    = $(job).submit.err\n" )
+        submit.write( "Log                      = $(job).submit.log\n" )
+        submit.write( "request_memory           = 20000\n" )
+        submit.write( "request_disk             = 5000000\n" )
+        submit.write( "Queue" )
+    submit.close()
+    
+def rpkmFile():
+    """
+    Run RPKM normalization on all HTSeq files in current working directory.
+    
+    Calls /home/GLBRCORG/mplace/scripts/RPKM.py
+
+    RPKM.py -d <directory> -g REF.gff
+
+    The assumption is that as part of this pipeline HTSeq has been run
+    using CDS as the genome feature.
+    """
+    with open('rpkm.jtf', 'w') as submit:
+        submit.write( "Universe                 = vanilla\n" )
+        submit.write( "Executable               = /home/GLBRCORG/mplace/scripts/RPKM.py\n" )
+        submit.write( "Arguments                = -d $(cwd) -f $(gff)\n" )
+        submit.write( "Notification             = Never\n" )
+        submit.write( "Should_Transfer_Files    = Yes\n" )
+        submit.write( "When_To_Transfer_Output  = On_Exit\n" )
+        submit.write( "Transfer_Input_Files     = $(gff)\n" )
+        submit.write( "Error                    = $(job).submit.err\n" )
+        submit.write( "Log                      = $(job).submit.log\n" )
+        submit.write( "request_memory           = 20000\n" )
+        submit.write( "request_disk             = 5000000\n" )
+        submit.write( "Queue" )
+    submit.close()
+
 def bamToWigFile():
     """
     Create wig file for viewing alignments in mochi view
@@ -504,8 +554,6 @@ def main():
         if re.search(r'.fastq',f):
             fastq.append(f)
 
-     
-
     with open('bwamem.log','w') as log:
         log.write("Running bwa mem on condor\n")
         log.write("Using the following input files:\n")
@@ -515,6 +563,8 @@ def main():
         log.write("\n")
         log.close()
         
+    cwd = os.getcwd()
+    
     #create Dagfile object
     mydag = Dagfile()
     numJobs = len(fastq)
@@ -597,10 +647,28 @@ def main():
         indexBamJob.add_parent(sortSamJob)
         mydag.add_job(indexBamJob)
         num += 1
-        
-        
-        
 
+        htseqJob = Job('htseq.jtf', 'job' + str(num))           # set up HTSeq job
+        htseqJob.pre_skip("1")
+        htseqJob.add_var('job', 'job' + str(num))
+        htseqJob.add_var('bam', sortName + '.bam' )
+        htseqJob.add_var('gff', ref[reference][2] )             
+        htseqName = re.sub('.sam', '_HTseqOutput.txt', samToBamName)
+        htseqJob.add_var('out', htseqName )
+        parent = 'job' + str(num)
+        htseqJob.add_parent(indexBamJob)
+        mydag.add_job(htseqJob)
+        num += 1
+
+        rpkmJob = Job('rpkm.jtf', 'job' + str(num))             # set up RPKM job
+        rpkmJob.pre_skip("1")
+        rpkmJob.add_var('job', 'job' + str(num))
+        rpkmJob.add_var('cwd', cwd)
+        rpkmJob.add_var('gff', ref[reference][2])
+        parent = 'job' + str(num)
+        mydag.add_job(rpkmJob)
+        num += 1
+        
     # write trimmomatic submit file
     trimCondorFile()
     # write bwa submit file
@@ -615,6 +683,13 @@ def main():
     sortSamFile()
     # write index bam submit file
     indexBamFile()
+    # write HTSeq submit file
+    if cmdResults['REVERSE'] == 1:
+        strandedness = 1
+    else:
+        strandedness = 0
+    htSeqFile(strandedness)
+
     
     
     mydag.save('MasterDagman.dsf')
