@@ -410,6 +410,8 @@ def htSeqFile( strandedness ):
     with open('htseq.jtf', 'w') as submit:
         submit.write( "Universe                 = vanilla\n" )
         submit.write( "Executable               = /opt/bifxapps/python/bin/htseq-count\n" )
+        #submit.write( "Environment              = \"PYTHONPATH=/opt/bifxapps/python/lib64/python2.6/site-packages/:/opt/bifxapps/python/lib/python2.6/site-packages/:/home/GLBRCORG/mplace/anaconda3/lib/python3.4/site-packages\"")
+        submit.write( "getenv                   = True\n")
         if strandedness == 1:
             submit.write( "Arguments                = -f bam -t CDS -i Parent -s reverse $(bam) $(gff)\n" )
         else:
@@ -668,9 +670,12 @@ def main():
         parent = 'job' + str(num)
         mydag.add_job(rpkmJob)
         num += 1
+
         
     # write trimmomatic submit file
     trimCondorFile()
+    # write fastqc submit file
+    fastqcCondorFile()
     # write bwa submit file
     bwaCondorFile()
     # write clean sam submit file
