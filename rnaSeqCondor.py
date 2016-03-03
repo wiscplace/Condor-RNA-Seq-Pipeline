@@ -547,7 +547,8 @@ def main():
 
     # Get aligner to use
     if cmdResults['ALIGNER'] is not None:
-        aligner = cmdResults['ALIGNER']
+        if cmdResults['ALIGNER'] == 'bwamem'
+        aligner = 'bwamem'
     else:
         aligner='bowtie2'
 
