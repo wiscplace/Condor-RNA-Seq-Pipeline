@@ -2,16 +2,15 @@
 """
 @Program: RPKM.py
 
-@Purpose: Run RPKM normalization on HTSeq results.
+@Purpose: Run RPKM normalization on HTSeq results on the HTCondor RNA-Seq pipeline.
+          Simplified command line.
 
-@Input:   HTSeq file, Reference GFF, gff feature type i.e. "CDS", "gene", genome name
+@Input:   HTSeq file, gff feature type i.e. "CDS", "gene", genome name
           default feature type is CDS, as the RNA-Seq pipeline runs HTSeq with CDS.
           
           HTSeq file -- just standard output from HTSeq
               ( see: http://www-huber.embl.de/users/anders/HTSeq/doc/overview.html )
-              
-          Reference GFF  -- General Feature Format, usually comes with Reference Genome
-          
+                      
           gff feature type:  default is CDS, but gene and others may be used, 
                              see your gff file for what is available.
           genome name: R64-1-1 -- SGD S. cerevisiae genome R64-1-1
@@ -37,8 +36,7 @@ Q0055   0.0     0.22849861627304624
 Q0060   0.0     0.0
          
 @Dependencies: 
-        Python 3, 
-        GFFUtils 
+        Python 3,  
         Samtools 
       
 @Output: Tab delimited text table, columns are strains, rows are gene names
@@ -61,12 +59,12 @@ genomeSize      = 0
 geneList        = []            # list of genes in HTSeq files, order = HTSeq file order
 result          = defaultdict(dict)  # dict of dicts key = strain , second key = gene name value =  RPKM value
 
+# list of available gff files
 refGFF = { 'R64' : "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-1-1_20110203/saccharomyces_cerevisiae_R64-1-1_20110208_noFasta.gff",
            'Y22' : "/home/GLBRCORG/mplace/data/reference/Y22-3/Y22-3_Final_GFF.gff",
            'PAN' : "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.gff",
            'R64-2' : "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/saccharomyces_cerevisiae_R64-2-1_20150113_noFasta.gff"                    
     }
-
 
 def getGeneList(file):
     """
@@ -164,7 +162,6 @@ def calcRPKM(genomeSize):
     N = Total number of aligned reads
     L = Length of gene
     """    
-    
     for file, count in totalReadCounts.items():
         if not os.path.exists(file):
             print("\n\tHTSeq file does not exist.\n")
@@ -218,7 +215,6 @@ def main():
     
     cmdparser = argparse.ArgumentParser(description="Run RPKM on all HTSeq files in Current Directory.",
                                         usage='%(prog)s -d <directory> -g REF.gff [-f gene] ' ,prog='RPKM.py'  )                                  
-    cmdparser.add_argument('-d', '--dir',  action='store',      dest='DIR' , help='Directory path containing the HTSeq output files.', metavar='')
     cmdparser.add_argument('-f', '--feature', action='store',   dest='FEATURE', help='Feature type to use w/ GFF file, default = CDS.', metavar='')
     cmdparser.add_argument('-r', '--reference', action='store', dest='REFERENCE', help='Genome Reference for genome size information.', metavar='')
     cmdparser.add_argument('-i', '--info', action='store_true', dest='INFO', help='Detailed description of program.')
@@ -231,12 +227,11 @@ def main():
         sys.exit(1)
              
     if cmdResults['INFO']:
-        print("\n  RPKM.py -d /Full/Path/To/HTSeq_output [-f feature] -r genome")
+        print("\n  RPKM.py -r genome [-f feature] ")
         print("\n  Purpose: Run RPKM normalization on HTSeq read counts.")
-        print("\n  Input  : Full path to HTSeq results directory.")
-        print("\n  The bam and bam index files need to be in current directory for script to work.")
+        print("\n  Input  : reference genome name.")
         print("\n  Output : Single RPKM results file, where each column denotes a strain.")    
-        print("\n  Usage  : RPKM.py -d /home/GLBRCORG/user/My_HTSeq_Dir [-f feature] -r genome")
+        print("\n  Usage  : RPKM.py -r genome [-f feature] ")
         print("\n           genome options R64 (SGD R64-1-1), R64-2 (SGD R64-2-1), Y22-3 (GLBRC), PAN (PanGenome)")
         print("  ")       
         print("\tTo see Python Docs and get a better explaination of the program:")
@@ -248,24 +243,16 @@ def main():
         print("\n\tSee Mike Place for any problems or suggestions.\n")
         sys.exit(1)
         
-    if cmdResults['DIR']:
-        htSeqDir = cmdResults['DIR']
-    
-    if not os.path.exists(htSeqDir):
-        print("\n\t-d HTSeq directory does not exist.\n")
-        cmdparser.print_help()
-        sys.exit(1)
-    else:
-        # Here we are assuming the .fai index file for reference exists
-        for f in os.listdir(htSeqDir):
-            if re.search(r'\_HTseqOutput.txt$',f):
-                htseqFiles.append(f)
+    htSeqDir = os.getcwd()
+    # Here we are assuming the .fai index file for reference exists
+    for f in os.listdir(htSeqDir):
+        if re.search(r'\_HTseqOutput.txt$',f):
+            htseqFiles.append(f)
         
     if cmdResults['FEATURE']:
         feature = cmdResults['FEATURE']
     else:
         feature = 'CDS'
-
 
     if cmdResults['REFERENCE'] == 'R64-2' or cmdResults['REFERENCE'] == 'PAN' or cmdResults['REFERENCE'] == 'Y22':
         refGenome = cmdResults['REFERENCE']
@@ -296,7 +283,6 @@ def main():
     # Start Real Work  
     createGeneDict(gffFile, feature)
     getTotalReadCounds(htList)
-    print(totalReadCounts)
     genomeSize = getRefGenomeSize(refGenome)
     getGeneList(htList[0])
     calcRPKM(genomeSize)
