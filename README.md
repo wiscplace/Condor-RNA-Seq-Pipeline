@@ -21,7 +21,7 @@ Outline of steps & commands used in pipeline:
 
   3) Alignment 
 
-          Bowtie2 -p 8 --phred33 -N 1 -x  referenceFile -U  trimmed_fastq -S outFile
+          Bowtie2-align-s -p 8 --phred33 -N 1 -x  referenceFile -U  trimmed_fastq -S outFile
                                               
           or
 
@@ -101,5 +101,17 @@ RPKM.py
     -i, --info       Detailed description of program.
                             
 ******************************************************************************
+rnaSeqCleanUp.py
 
+    Purpose: Post Condor RNA-Seq pipeline run after all other condor jobs are
+             complete in current directory.
+                    
+    Input:   None 
+                              
+                                                   
+    Output: The following directories are created fastq, alignment, htseq, wig
+            and the associated files are moved into them, i.e. bam files go 
+            in the alignment directory.
+
+******************************************************************************
 
