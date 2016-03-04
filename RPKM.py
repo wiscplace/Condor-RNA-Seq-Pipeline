@@ -4,7 +4,7 @@
 
 @Purpose: Run RPKM normalization on HTSeq results.
 
-@Input:   HTSeq file, Reference GFF, gff feature type i.e. "CDS", "gene"
+@Input:   HTSeq file, Reference GFF, gff feature type i.e. "CDS", "gene", genome name
           default feature type is CDS, as the RNA-Seq pipeline runs HTSeq with CDS.
           
           HTSeq file -- just standard output from HTSeq
@@ -13,7 +13,11 @@
           Reference GFF  -- General Feature Format, usually comes with Reference Genome
           
           gff feature type:  default is CDS, but gene and others may be used, 
-                             see your gff file for what is available.           
+                             see your gff file for what is available.
+          genome name: R64-1-1 -- SGD S. cerevisiae genome R64-1-1
+                       R64-2-1 -- SGD S. cerevisiae genome R64-2-1
+                       PAN     -- PanGenome
+                       Y22-3   -- GLBRC Y22-3 S. cerevisiae genome
                 
 @Output:  RPKM results for a feature type in a tab delimited table.
           First column is the Gene (feature) Name
@@ -177,36 +181,21 @@ def calcRPKM(genomeSize):
                 else:
                     result[file][gene[0]] = 0
 
-def getRefGenomeSize(bamFile):
+def getRefGenomeSize( gen ):
     """
-    Get reference genome size from header of a bam file using samtools. 
-    Only used one time per program run.
-    Idea is to make this program Reference Genome agnostic.
-    
-    This will parse the bam header.
-    All lines beginning w/ @SQ will be parsed and the LN:# will be summed to
-    get the total Reference Genome Size.
-    
+    Get reference genome size, values computed from the fasta files
+    for each genome.    
     """
+    
+    R64-1-1 = 12157105
+    R64-2-1 = 12157105
+    Pan     = 13345927
+    Y22     = 12170480
+
+    
     genomeSize = 0
     
-    cmd = [ 'samtools', 'view', '-H',  bamFile ]       # Get header
-    output  = subprocess.Popen(cmd, stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-    result1 = output[0].decode( 'utf-8' )
-    result2 = output[1].decode( 'utf-8' )
-    chrom   = result1.split("\n")
-     
-    # use generators to get all lines with chromosome size info, starts with @SQ
-    data = ( line for line in chrom if line.startswith('@SQ')  )    
-
-    for d in data:
-        row = d.split()
-        chromLen = row[2].split(':')                         # get chrom length 
-        genomeSize += int(chromLen[1])
-        
-    with open('RPKM.log','a') as log:
-        log.write("\n\nCalculated genome size: %d\n" %genomeSize)
-        log.close
+    
     return genomeSize
                     
 def checkFormat(htseqFile):
