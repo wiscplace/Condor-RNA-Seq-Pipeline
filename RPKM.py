@@ -232,7 +232,7 @@ def main():
         print("\n  Input  : reference genome name.")
         print("\n  Output : Single RPKM results file, where each column denotes a strain.")    
         print("\n  Usage  : RPKM.py -r genome [-f feature] ")
-        print("\n           genome options R64 (SGD R64-1-1), R64-2 (SGD R64-2-1), Y22-3 (GLBRC), PAN (PanGenome)")
+        print("\n           genome options R64 (SGD R64-1-1), R64-2 (SGD R64-2-1), Y22 (GLBRC Y22-3), PAN (PanGenome)")
         print("  ")       
         print("\tTo see Python Docs and get a better explaination of the program:")
         print("\n\tOpen python console and enter")
