@@ -511,7 +511,7 @@ def main():
     cmdparser.add_argument('-a', '--aligner', action='store',      dest='ALIGNER', help='Default aligner is Bowtie2, to use Bwa mem: -a bwamem')
     cmdparser.add_argument('-d', '--detail',  action='store_true', dest='DETAIL',  help='Print a more detailed description of program.')    
     cmdparser.add_argument('-r', '--reverse', action='store_true', dest='REVERSE', help='HTSeq -s reverse, for Biotech GEC data, optional.')
-    cmdparser.add_argument('-ref', '--reference', action='store',  dest='REFERENCE', help='Choose reference -ref R64 (SGD R64-1-1) -ref Y22-3 (GLBRC)' )
+    cmdparser.add_argument('-ref', '--reference', action='store',  dest='REFERENCE', help='Reference R64 (SGD R64-1-1), R64-2 (SGD R64-2-1), Y22-3 (GLBRC), PAN (PanGenome)' )
     cmdResults = vars(cmdparser.parse_args())
 
     fastq = []              # List of fastq files to process
@@ -597,8 +597,6 @@ def main():
     else:
         reference = 'R64'
 
-    print(reference)
-    sys.exit(1)
     # Get aligner to use
     if cmdResults['ALIGNER'] is not None:
         if cmdResults['ALIGNER'] == 'bwamem':
