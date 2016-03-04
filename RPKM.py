@@ -56,7 +56,7 @@ from collections import defaultdict
 
 featureDict     = {}            # key = gene name,   value = tuple(Gene_LENGTH, StartPos, StopPos)
 totalReadCounts = {}            # key = sample name, value = total aligned read counts
-bamList         = []            # list of sample bam files to process
+htList         = []            # list of sample bam files to process
 genomeSize      = 0
 geneList        = []            # list of genes in HTSeq files, order = HTSeq file order
 result          = defaultdict(dict)  # dict of dicts key = strain , second key = gene name value =  RPKM value
@@ -66,7 +66,7 @@ def getGeneList(file):
     Get the list of genes in the same order as the HTSeq files.
     for outputing results in HTSeq order
     """
-    htseqName = file + "_HTseqOutput.txt"
+    htseqName = file
     
     with open(htseqName) as htseq:
         for line in htseq:
@@ -75,9 +75,9 @@ def getGeneList(file):
             row = line.split()
             geneList.append(row[0])
 
-def getTotalReadCounds( bamList  ):
+def getTotalReadCounds( htList  ):
     """
-    bamList = list of all files names .bam in current working directory.
+    htList = list of all HTSeq files in current working directory.
     Open and sum the read counts in each htseq file.       
     This will include all read counts for each gene as well as the counts
     for the non-gene categories at the bottom of column:
@@ -88,8 +88,8 @@ def getTotalReadCounds( bamList  ):
     __alignment_not_unique  
     
     """
-    for b in bamList:
-        htseqName = b + "_HTseqOutput.txt"
+    for ht in htList:
+        htseqName = ht
         
         # calculate the total number of aligned reads        
         totalAlignedReads = 0
@@ -186,17 +186,8 @@ def getRefGenomeSize( gen ):
     Get reference genome size, values computed from the fasta files
     for each genome.    
     """
-    
-    R64-1-1 = 12157105
-    R64-2-1 = 12157105
-    Pan     = 13345927
-    Y22     = 12170480
-
-    
-    genomeSize = 0
-    
-    
-    return genomeSize
+    genomeDict = { 'R64' : 12157105, 'R64-2' : 12157105, 'PAN' : 13345927, 'Y22' : 12170480 }
+    return genomeDict[gen]
                     
 def checkFormat(htseqFile):
     """
@@ -222,7 +213,8 @@ def main():
                                         usage='%(prog)s -d <directory> -g REF.gff [-f gene] ' ,prog='RPKM.py'  )                                  
     cmdparser.add_argument('-d', '--dir',  action='store',      dest='DIR' , help='Directory path containing the HTSeq output files.', metavar='')
     cmdparser.add_argument('-g', '--gff',  action='store',      dest='GFF' , help='GFF file to use.', metavar=''  )
-    cmdparser.add_argument('-f', '--feature', action='store',   dest='FEATURE', help='Feature type to use w/ GFF file, default = CDS.', metavar='')        
+    cmdparser.add_argument('-f', '--feature', action='store',   dest='FEATURE', help='Feature type to use w/ GFF file, default = CDS.', metavar='')
+    cmdparser.add_argument('-r', '--reference', action='store', dest='REFERENCE', help='Genome Reference for genome size information.', metavar='')
     cmdparser.add_argument('-i', '--info', action='store_true', dest='INFO', help='Detailed description of program.')
     cmdResults = vars(cmdparser.parse_args())
     
@@ -233,12 +225,13 @@ def main():
         sys.exit(1)
              
     if cmdResults['INFO']:
-        print("\n  RPKM.py -d /Full/Path/To/HTSeq_output -g Reference GFF file [-f feature]")
+        print("\n  RPKM.py -d /Full/Path/To/HTSeq_output -g Reference GFF file [-f feature] -r genome")
         print("\n  Purpose: Run RPKM normalization on HTSeq read counts.")
         print("\n  Input  : Full path to HTSeq results directory.")
         print("\n  The bam and bam index files need to be in current directory for script to work.")
         print("\n  Output : Single RPKM results file, where each column denotes a strain.")    
-        print("\n  Usage  : RPKM.py -d /home/GLBRCORG/user/My_HTSeq_Dir -g REF.gff [-f feature] ")        
+        print("\n  Usage  : RPKM.py -d /home/GLBRCORG/user/My_HTSeq_Dir -g REF.gff [-f feature] -r genome")
+        print("\n           genome options R64 (SGD R64-1-1), R64-2 (SGD R64-2-1), Y22-3 (GLBRC), PAN (PanGenome)")
         print("  ")       
         print("\tTo see Python Docs and get a better explaination of the program:")
         print("\n\tOpen python console and enter")
@@ -273,11 +266,15 @@ def main():
         cmdparser.print_help()
         sys.exit(1)
         
-    
     if cmdResults['FEATURE']:
         feature = cmdResults['FEATURE']
     else:
-        feature = 'CDS'    
+        feature = 'CDS'
+
+    if cmdResults['REFERENCE']:
+        refGenome = cmdResults['REFERENCE']
+    else:
+        refGenome = 'R64'
     
     # Log the initial parameters
     with open('RPKM.log','w') as log:
@@ -287,30 +284,28 @@ def main():
             log.write("\t\t%s\n" %(ht))
         log.write("\nGFF file     : %s\n" %(gffFile))
         log.write("\nUsing Feature: %s\n" %(feature))
+        log.write("\nUsing Genome : %s\n" %(refGenome))
         log.close()
+
+    for ht in os.listdir():
+        if ht.endswith('_HTseqOutput.txt'):
+            htList.append(ht)
+
+    if not htList:
+        print("No HTSeq files found in current directory")
+        print("Exiting Program")
         
-    # Get a list of bam files in current directory
-    for bam in os.listdir():
-        if bam.endswith('.bam'):
-            bamList.append(bam)
-        
-    # if there are no files with the .bam extension, print help and exit.
-    if not bamList:
-        print("No bam files found in current directory.")
-        print("Exiting program")
-        cmdparser.print_help()
-        sys.exit()  
-    
-    # Start Real Work
+    # Start Real Work  
     createGeneDict(gffFile, feature)
-    getTotalReadCounds(bamList)
-    genomeSize = getRefGenomeSize(bamList[0])  
-    getGeneList(bamList[0])
+    getTotalReadCounds(htList)
+    print(totalReadCounts)
+    genomeSize = getRefGenomeSize(refGenome)
+    getGeneList(htList[0])
     calcRPKM(genomeSize)
     
     with open('RPKM.results','w') as out:
     #print header
-        header = bamList
+        header = htList
         header.insert(0,"Gene")
         newHeader = "\t".join(header)
         out.write(newHeader + "\n")        
@@ -320,14 +315,12 @@ def main():
             data.append(g)
             out.write("%s\t" %(g))
             row = []
-            for b in bamList:
-                name = b + "_HTseqOutput.txt"
+            for ht in htList:
+                name = ht 
                 if name in result:
                     row.append(str(result[name][g]))
             newRow = "\t".join(row)
             out.write(newRow + "\n")
-                  
-
 
 if __name__ == "__main__":
     main()
