@@ -251,9 +251,6 @@ def trimCondorFile():
 
 def fastqcCondorFile():
     """
-    NOT USED YET, need to find a way to call the executable, command
-    below does not work.
-    Step 2
     Create condor job template file to run FastQC.
     This provides some quality control checks on trimmed sequence data.
 
@@ -263,6 +260,7 @@ def fastqcCondorFile():
     with open('fastqcCondor.jtf', 'w') as submit: 
         submit.write( "Universe                 = java\n" )
         submit.write( "Executable               = /opt/bifxapps/FastQC/fastqc\n" )
+        submit.write( "getenv                   = True\n")
         submit.write( "Arguments                = $(read)\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = Yes\n" )
@@ -278,8 +276,44 @@ def fastqcCondorFile():
 def bowtie2CondorFile():
     """
     Create condor job template file to run bowtie2.
+    /opt/bifxapps/bin/bowtie2
+    command that works on the command line (but fails in condor submit file):
+    
+    /opt/bifxapps/bin/bowtie2 -p 8 --phred33 -N 1
+    -x /home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-1-1_20110203/s.cerevisiae-R64-1-1
+    -U run333.YPS1009.10kreads.trim.fastq -S ck.YPS1009.sam
+
+    Here I am using bowtie2-align-s, from the bowtie2 docs:
+
+        The bowtie2, bowtie2-build and bowtie2-inspect executables are actually wrapper scripts that
+        call binary programs as appropriate. The wrappers shield users from having to distinguish between
+        "small" and "large" index formats, discussed briefly in the following section. Also,
+        the bowtie2 wrapper provides some key functionality, like the ability to handle compressed
+        inputs, and the fucntionality for --un, --al and related options.
+        It is recommended that you always run the bowtie2 wrappers and not run the binaries directly.
+        Small and large indexes
+        bowtie2-build can index reference genomes of any size. For genomes less than about 4 billion
+        nucleotides in length, bowtie2-build builds a "small" index using 32-bit numbers in various
+        parts of the index. When the genome is longer, bowtie2-build builds a "large" index using
+        64-bit numbers. Small indexes are stored in files with the .bt2 extension
     """
-    pass
+    with open('bowtie2Condor.jtf', 'w') as submit: 
+        submit.write( "Universe                 = vanilla\n" )
+        submit.write( "Executable               = /opt/bifxapps/bin/bowtie2-align-s\n" )
+        submit.write( "Environment              =\"BOWTIE_INDEXES=$(reference)\"\n")
+        submit.write( "getenv                   = True\n" )
+        submit.write( "Arguments                = -p 8 --phred33 -N 1 -x $(reference) -U $(read) -S $(out)\n" )
+        submit.write( "Notification             = Never\n" )
+        submit.write( "Should_Transfer_Files    = Yes\n" )
+        submit.write( "When_To_Transfer_Output  = On_Exit\n" )
+        submit.write( "Transfer_Input_Files     = $(read)\n" )
+        submit.write( "Error                    = $(job).submit.err\n" )
+        submit.write( "Log                      = $(job).submit.log\n" )
+        submit.write( "request_cpus             = 8\n" )
+        submit.write( "request_memory           = 20G\n" )
+        submit.write( "request_disk             = 500\n" )
+        submit.write( "Queue" )
+    submit.close()
 
 
 def bwaCondorFile():
@@ -297,7 +331,7 @@ def bwaCondorFile():
         submit.write( "Output			 = $(outfile)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
-        submit.write( "request_memory           = 20000\n" )
+        submit.write( "request_memory           = 20G\n" )
         submit.write( "request_disk             = 5000000\n" )
         submit.write( "Queue" )
     submit.close()
@@ -318,7 +352,7 @@ def cleanSamFile():
         submit.write( "Transfer_Input_Files     = $(sam)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
-        submit.write( "request_memory           = 8000\n" )
+        submit.write( "request_memory           = 20G\n" )
         submit.write( "request_disk             = 400000\n" )
         submit.write( "Queue" )
     submit.close()
@@ -359,7 +393,7 @@ def samToBamFile():
         submit.write( "Transfer_Input_Files     = $(reference),$(sam)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
-        submit.write( "request_memory           = 20000\n" )
+        submit.write( "request_memory           = 20G\n" )
         submit.write( "request_disk             = 5000000\n" )
         submit.write( "Queue" )
     submit.close()
@@ -378,7 +412,7 @@ def sortSamFile():
         submit.write( "Transfer_Input_Files     = $(bam)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
-        submit.write( "request_memory           = 20000\n" )
+        submit.write( "request_memory           = 20G\n" )
         submit.write( "request_disk             = 5000000\n" )
         submit.write( "Queue" )
     submit.close()
@@ -397,7 +431,7 @@ def indexBamFile():
         submit.write( "Transfer_Input_Files     = $(bam)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
-        submit.write( "request_memory           = 20000\n" )
+        submit.write( "request_memory           = 20G\n" )
         submit.write( "request_disk             = 5000000\n" )
         submit.write( "Queue" )
     submit.close()
@@ -410,7 +444,6 @@ def htSeqFile( strandedness ):
     with open('htseq.jtf', 'w') as submit:
         submit.write( "Universe                 = vanilla\n" )
         submit.write( "Executable               = /opt/bifxapps/python/bin/htseq-count\n" )
-        #submit.write( "Environment              = \"PYTHONPATH=/opt/bifxapps/python/lib64/python2.6/site-packages/:/opt/bifxapps/python/lib/python2.6/site-packages/:/home/GLBRCORG/mplace/anaconda3/lib/python3.4/site-packages\"")
         submit.write( "getenv                   = True\n")
         if strandedness == 1:
             submit.write( "Arguments                = -f bam -t CDS -i Parent -s reverse $(bam) $(gff)\n" )
@@ -423,8 +456,8 @@ def htSeqFile( strandedness ):
         submit.write( "output                   = $(out)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
-        submit.write( "request_memory           = 20000\n" )
-        submit.write( "request_disk             = 5000000\n" )
+        submit.write( "request_memory           = 8G\n" )
+        submit.write( "request_disk             = 5000\n" )
         submit.write( "Queue" )
     submit.close()
     
@@ -446,11 +479,12 @@ def rpkmFile():
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = Yes\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
+        submit.write( "output                   = $(out)\n" )
         submit.write( "Transfer_Input_Files     = $(gff)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
-        submit.write( "request_memory           = 20000\n" )
-        submit.write( "request_disk             = 5000000\n" )
+        submit.write( "request_memory           = 8G\n" )
+        submit.write( "request_disk             = 500\n" )
         submit.write( "Queue" )
     submit.close()
 
@@ -547,24 +581,15 @@ def main():
 
     # Get aligner to use
     if cmdResults['ALIGNER'] is not None:
-        if cmdResults['ALIGNER'] == 'bwamem'
-        aligner = 'bwamem'
-    else:
-        aligner='bowtie2'
+        if cmdResults['ALIGNER'] == 'bwamem':
+            aligner = 'bwamem'
+        else:
+            aligner='bowtie2'
 
     # Get input file listing fastq files to process
     for f in os.listdir(cwd):
         if re.search(r'.fastq',f):
             fastq.append(f)
-
-    with open('bwamem.log','w') as log:
-        log.write("Running bwa mem on condor\n")
-        log.write("Using the following input files:\n")
-        for file in fastq:
-            log.write('\t%s\n' %(file))
-        log.write("Reference : %s\n" %(reference))
-        log.write("\n")
-        log.close()
         
     cwd = os.getcwd()
     
@@ -582,18 +607,32 @@ def main():
         trimJob.add_var('fastq', f )
         trimName = re.sub(r"fastq","trim.fastq", f)
         trimJob.add_var('outfile', trimName)  
-        num += 1   
-        
-        bwaJob =  Job('bwaCondor.jtf', 'job' + str(num))     # set bwa job file
-        mydag.add_job(bwaJob)   
-        bwaJob.pre_skip("1")
-        bwaJob.add_var('job', 'job' + str(num))              # setup variable to substitue
-        bwaJob.add_var('reference', ref[reference][1])
-        bwaJob.add_var('read', f )
-        outName = re.sub(r"fastq","sam", trimName)
-        bwaJob.add_var('outfile', outName)
-        bwaJob.add_parent(trimJob)
         num += 1
+        
+        if aligner == 'bwamem':
+            bwaJob =  Job('bwaCondor.jtf', 'job' + str(num))     # set bwa job file
+            mydag.add_job(bwaJob)   
+            bwaJob.pre_skip("1")
+            bwaJob.add_var('job', 'job' + str(num))              # setup variable to substitue
+            #bwaJob.add_var('reference', ref[reference][1])
+            bwaJob.add_var('read', trimName )
+            outName = re.sub(r"fastq","sam", trimName)
+            bwaJob.add_var('outfile', outName)
+            bwaJob.add_parent(trimJob)
+            num += 1
+            alignerJob = bwaJob
+        else:
+            bowtie2Job =  Job('bowtie2Condor.jtf', 'job' + str(num))     # set bwa job file
+            mydag.add_job(bowtie2Job)   
+            bowtie2Job.pre_skip("1")
+            bowtie2Job.add_var('job', 'job' + str(num))              # setup variable to substitue
+            bowtie2Job.add_var('reference', ref[reference][0])
+            bowtie2Job.add_var('read', trimName )
+            outName = re.sub(r"fastq","sam", trimName)
+            bowtie2Job.add_var('out', outName)
+            bowtie2Job.add_parent(trimJob)
+            num += 1
+            alignerJob = bowtie2Job            
           
         cleanJob =    Job('cleanSam.jtf', 'job' + str(num))  # set up clean sam job file
         cleanJob.pre_skip("1")
@@ -602,7 +641,7 @@ def main():
         cleanName = re.sub( r"fastq", "clean.sam", f)
         cleanJob.add_var( 'outfile', cleanName)
         parent = 'job' + str(num)
-        cleanJob.add_parent(bwaJob)                           # Make bwa job parent of clean sam job
+        cleanJob.add_parent(alignerJob)                           # Make bwa job parent of clean sam job
         mydag.add_job(cleanJob)
         num += 1
 
@@ -668,6 +707,7 @@ def main():
         rpkmJob.add_var('job', 'job' + str(num))
         rpkmJob.add_var('cwd', cwd)
         rpkmJob.add_var('gff', ref[reference][2])
+        rpkmJob.add_var('out', 'RPKM.results')
         parent = 'job' + str(num)
         mydag.add_job(rpkmJob)
         num += 1
@@ -677,8 +717,11 @@ def main():
     trimCondorFile()
     # write fastqc submit file
     fastqcCondorFile()
-    # write bwa submit file
-    bwaCondorFile()
+    # write aligner submit file
+    if aligner == 'bwamem':
+        bwaCondorFile()
+    else:
+        bowtie2CondorFile()
     # write clean sam submit file
     cleanSamFile()
     # write add read group to sam condor 
@@ -695,6 +738,8 @@ def main():
     else:
         strandedness = 0
     htSeqFile(strandedness)
+    # write RPKM submit file
+    rpkmFile()
 
     
     
