@@ -61,6 +61,13 @@ genomeSize      = 0
 geneList        = []            # list of genes in HTSeq files, order = HTSeq file order
 result          = defaultdict(dict)  # dict of dicts key = strain , second key = gene name value =  RPKM value
 
+refGFF = { 'R64' : "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-1-1_20110203/saccharomyces_cerevisiae_R64-1-1_20110208_noFasta.gff",
+           'Y22' : "/home/GLBRCORG/mplace/data/reference/Y22-3/Y22-3_Final_GFF.gff",
+           'PAN' : "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.gff",
+           'R64-2' : "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/saccharomyces_cerevisiae_R64-2-1_20150113_noFasta.gff"                    
+    }
+
+
 def getGeneList(file):
     """
     Get the list of genes in the same order as the HTSeq files.
@@ -212,7 +219,6 @@ def main():
     cmdparser = argparse.ArgumentParser(description="Run RPKM on all HTSeq files in Current Directory.",
                                         usage='%(prog)s -d <directory> -g REF.gff [-f gene] ' ,prog='RPKM.py'  )                                  
     cmdparser.add_argument('-d', '--dir',  action='store',      dest='DIR' , help='Directory path containing the HTSeq output files.', metavar='')
-    cmdparser.add_argument('-g', '--gff',  action='store',      dest='GFF' , help='GFF file to use.', metavar=''  )
     cmdparser.add_argument('-f', '--feature', action='store',   dest='FEATURE', help='Feature type to use w/ GFF file, default = CDS.', metavar='')
     cmdparser.add_argument('-r', '--reference', action='store', dest='REFERENCE', help='Genome Reference for genome size information.', metavar='')
     cmdparser.add_argument('-i', '--info', action='store_true', dest='INFO', help='Detailed description of program.')
@@ -225,12 +231,12 @@ def main():
         sys.exit(1)
              
     if cmdResults['INFO']:
-        print("\n  RPKM.py -d /Full/Path/To/HTSeq_output -g Reference GFF file [-f feature] -r genome")
+        print("\n  RPKM.py -d /Full/Path/To/HTSeq_output [-f feature] -r genome")
         print("\n  Purpose: Run RPKM normalization on HTSeq read counts.")
         print("\n  Input  : Full path to HTSeq results directory.")
         print("\n  The bam and bam index files need to be in current directory for script to work.")
         print("\n  Output : Single RPKM results file, where each column denotes a strain.")    
-        print("\n  Usage  : RPKM.py -d /home/GLBRCORG/user/My_HTSeq_Dir -g REF.gff [-f feature] -r genome")
+        print("\n  Usage  : RPKM.py -d /home/GLBRCORG/user/My_HTSeq_Dir [-f feature] -r genome")
         print("\n           genome options R64 (SGD R64-1-1), R64-2 (SGD R64-2-1), Y22-3 (GLBRC), PAN (PanGenome)")
         print("  ")       
         print("\tTo see Python Docs and get a better explaination of the program:")
@@ -254,27 +260,19 @@ def main():
         for f in os.listdir(htSeqDir):
             if re.search(r'\_HTseqOutput.txt$',f):
                 htseqFiles.append(f)
-    
-    if cmdResults['GFF']:
-        gffFile = cmdResults['GFF']
-        if not os.path.exists(gffFile):
-            print("\n\t -g GFF file does not exist.\n")
-            cmdparser.print_help()
-            sys.exit(1)
-    else:
-        print("\n\t -g GFF file does not exist.\n")
-        cmdparser.print_help()
-        sys.exit(1)
         
     if cmdResults['FEATURE']:
         feature = cmdResults['FEATURE']
     else:
         feature = 'CDS'
 
-    if cmdResults['REFERENCE']:
+
+    if cmdResults['REFERENCE'] == 'R64-2' or cmdResults['REFERENCE'] == 'PAN' or cmdResults['REFERENCE'] == 'Y22':
         refGenome = cmdResults['REFERENCE']
+        gffFile  = refGFF[refGenome]
     else:
         refGenome = 'R64'
+        gffFile = refGFF['R64']
     
     # Log the initial parameters
     with open('RPKM.log','w') as log:
