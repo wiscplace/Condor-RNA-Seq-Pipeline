@@ -55,7 +55,7 @@ Outline of steps & commands used in pipeline:
 
          /home/GLBRCORG/mplace/scripts/RPKM.py
                                                                                                                                                       
-         usage: RPKM.py -d <directory> -g REF.gff [-f gene] 
+         usage: RPKM.py -r refname [-f gene] 
 
          Run RPKM on all HTSeq files in Current Directory.
 
@@ -91,12 +91,13 @@ RPKM.py
 
     usage: RPKM.py -d <directory> -g REF.gff [-f gene]
 
+    example: ./RPKM.py  -r R64 
+
     Run RPKM on all HTSeq files in Current Directory.
 
     optional arguments:
     -h, --help       show this help message and exit
-    -d , --dir       Directory path containing the HTSeq output files.
-    -g , --gff       GFF file to use.
+    -g , --ref       Reference GFF file to use.
     -f , --feature   Feature type to use w/ GFF file, default = CDS.
     -i, --info       Detailed description of program.
                             
