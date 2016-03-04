@@ -83,7 +83,7 @@ Bowtie2:
     -S $OUT.sam    # output sam file
 
     on GLBRC scarcity:
-    /opt/bifxapps/bin/bowtie2
+    /opt/bifxapps/bin/bowtie2-align-s
     
     OUTPUT: sam file
 
@@ -207,7 +207,13 @@ ref = { 'R64' : ( "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R
                   "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta",
                   "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.gff",
                   "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta.fai",
-                  "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta" ) 
+                  "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta" )
+        
+        'R64-2' : ( "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/s.cerevisiae-R64-2.1",
+                    "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/S288C_reference_sequence_R64-2-1_20150113.fasta",
+                    "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/saccharomyces_cerevisiae_R64-2-1_20150113_noFasta.gff",
+                    "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/S288C_reference_sequence_R64-2-1_20150113.fsa.fai",
+                    "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/S288C_reference_sequence_R64-2-1_20150113.fasta" )
     }
 
 def trimCondorFile():
@@ -532,7 +538,9 @@ def main():
         print("\t-ref  change default reference, usage:  -ref Y22-3")
         print("\t    Current Reference List:")
         print("\t\tR64-1-1 -- default equivalent to UCSC sacCer3" )
-        print("\t\tY22-3   -- GLBRC assembly")
+        print("\t\tR64-2-1 -- Most recent SGD S.cerevisiae genome reference" )
+        print("\t\tPAN     -- S.cerevisiae PanGenome reference ")
+        print("\t\tY22-3   -- GLBRC strain Y22-3 S.cerevisiae reference")
         print("\nOutline of steps & commands used in pipeline:\n")
         print("  1) Trimmomatic ")
         print("\t/opt/bifxapps/Trimmomatic-0.30/trimmomatic-0.30.jar SE -phred33 input_fastq ")
