@@ -483,7 +483,7 @@ def rpkmFile():
     with open('rpkm.jtf', 'w') as submit:
         submit.write( "Universe                 = vanilla\n" )
         submit.write( "Executable               = /home/GLBRCORG/mplace/scripts/RPKM.py\n" )
-        submit.write( "Arguments                = -d $(cwd) -g $(gff)\n" )
+        submit.write( "Arguments                = -d $(cwd) -g $(gff) -r $(genome)\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = Yes\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
@@ -726,6 +726,7 @@ def main():
         rpkmJob.add_var('cwd', cwd)
         rpkmJob.add_var('gff', ref[reference][2])
         rpkmJob.add_var('out', 'RPKM.results')
+        rpkmJob.add_var('genome', reference)
         parent = 'job' + str(num)
         mydag.add_job(rpkmJob)
         num += 1
