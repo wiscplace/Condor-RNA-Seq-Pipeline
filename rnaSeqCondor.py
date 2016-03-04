@@ -8,12 +8,14 @@ Purpose: Implement the currently used Gasch lab RNA-Seq pipeline using condor
 
          HTCondor https://research.cs.wisc.edu/htcondor/
 
-Input:  reference file, single or paired
+Input:  reference, single
 
-    text file with a list of RNA-Seq fastq files to be processed
-    one file name per line. 
-    to generate:  /bin/ls *.fastq > input.txt
-    optional parameters: -htseq reverse   ( for HTSeq )
+        Reference Genomes available:
+        
+        R64-1-1 -- default equivalent to UCSC sacCer3
+        Most recent SGD S.cerevisiae genome reference
+        S.cerevisiae PanGenome reference 
+        GLBRC strain Y22-3 S.cerevisiae reference
    
 Output: Each step has its own condor job template file (.jtf) and output see below:
 
@@ -207,7 +209,7 @@ ref = { 'R64' : ( "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R
                   "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta",
                   "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.gff",
                   "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta.fai",
-                  "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta" )
+                  "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta" ),
         
         'R64-2' : ( "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/s.cerevisiae-R64-2.1",
                     "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/S288C_reference_sequence_R64-2-1_20150113.fasta",
@@ -582,11 +584,21 @@ def main():
         sys.exit(1)
 
     # Get reference genome to use
-    if cmdResults['REFERENCE'] == 'Y22-3' or cmdResults['REFERENCE'] == 'y22-3':
-        reference = 'Y22'
+    if cmdResults['REFERENCE'] is not None:
+        lowerRef = cmdResults['REFERENCE'].lower()
+        if lowerRef == 'y22-3':
+            reference = 'Y22'
+        elif lowerRef == 'r64-2':
+            reference = 'R64-2'
+        elif lowerRef == 'pan':
+            reference = 'PAN'
+        else:
+            reference = 'R64'
     else:
         reference = 'R64'
 
+    print(reference)
+    sys.exit(1)
     # Get aligner to use
     if cmdResults['ALIGNER'] is not None:
         if cmdResults['ALIGNER'] == 'bwamem':
