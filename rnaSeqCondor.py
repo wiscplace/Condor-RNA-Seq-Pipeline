@@ -469,30 +469,22 @@ def htSeqFile( strandedness ):
         submit.write( "Queue" )
     submit.close()
     
-def rpkmFile():
+def finalFile():
     """
-    Run RPKM normalization on all HTSeq files in current working directory.
-    
-    Calls /home/GLBRCORG/mplace/scripts/RPKM.py
-
-    RPKM.py -d <directory> -g REF.gff
-
-    The assumption is that as part of this pipeline HTSeq has been run
-    using CDS as the genome feature.
+    Create the job submit file for the FINAL DAGman node.
+    This runs bam to wig, RPKM then cleans up the directory
+    by removing extra files and packaging the results.
     """
-    with open('rpkm.jtf', 'w') as submit:
-        submit.write( "Universe                 = vanilla\n" )
-        submit.write( "Executable               = /home/GLBRCORG/mplace/scripts/RPKM.py\n" )
-        submit.write( "Arguments                = -d $(cwd) -g $(gff) -r $(genome)\n" )
+    with open('cleanAndFinalize.jtf', 'w') as submit:
+        submit.write( "Universe                 = local\n" )
+        submit.write( "Executable               = rnaSeqCleanUp.py\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = Yes\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
-        submit.write( "output                   = $(out)\n" )
-        submit.write( "Transfer_Input_Files     = $(gff)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
-        submit.write( "request_memory           = 8G\n" )
-        submit.write( "request_disk             = 500\n" )
+        submit.write( "request_memory           = 4G\n" )
+        submit.write( "request_disk             = 100\n" )
         submit.write( "Queue" )
     submit.close()
 
@@ -720,6 +712,10 @@ def main():
         mydag.add_job(htseqJob)
         num += 1
 
+        finalJob = Job('cleanAndFinalize.jtf', 'final_node')
+        finalJob.pre_skip("1")
+        mydag.add_job(finalJob)
+        
         #rpkmJob = Job('rpkm.jtf', 'job' + str(num))             # set up RPKM job
         #rpkmJob.pre_skip("1")
         #rpkmJob.add_var('job', 'job' + str(num))
@@ -756,13 +752,10 @@ def main():
     else:
         strandedness = 0
     htSeqFile(strandedness)
-    # write RPKM submit file
-    #rpkmFile()
+    # write FINAL node submit file
+    finalFile()
     
     mydag.save('MasterDagman.dsf')
-     
-    # clean up unnessary files
-    # remove original sam file, generated w/ bwa
     
 if __name__ == "__main__":
     main()
