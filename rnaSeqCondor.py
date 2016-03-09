@@ -632,7 +632,7 @@ def main():
             mydag.add_job(bwaJob)   
             bwaJob.pre_skip("1")
             bwaJob.add_var('job', 'job' + str(num))              # setup variable to substitue
-            #bwaJob.add_var('reference', ref[reference][1])
+            bwaJob.add_var('reference', ref[reference][1])
             bwaJob.add_var('read', trimName )
             outName = re.sub(r"fastq","sam", trimName)
             bwaJob.add_var('outfile', outName)
@@ -720,18 +720,17 @@ def main():
         mydag.add_job(htseqJob)
         num += 1
 
-        rpkmJob = Job('rpkm.jtf', 'job' + str(num))             # set up RPKM job
-        rpkmJob.pre_skip("1")
-        rpkmJob.add_var('job', 'job' + str(num))
-        rpkmJob.add_var('cwd', cwd)
-        rpkmJob.add_var('gff', ref[reference][2])
-        rpkmJob.add_var('out', 'RPKM.results')
-        rpkmJob.add_var('genome', reference)
-        parent = 'job' + str(num)
-        mydag.add_job(rpkmJob)
-        num += 1
+        #rpkmJob = Job('rpkm.jtf', 'job' + str(num))             # set up RPKM job
+        #rpkmJob.pre_skip("1")
+        #rpkmJob.add_var('job', 'job' + str(num))
+        #rpkmJob.add_var('cwd', cwd)
+        #rpkmJob.add_var('gff', ref[reference][2])
+        #rpkmJob.add_var('out', 'RPKM.results')
+        #rpkmJob.add_var('genome', reference)
+        #parent = 'job' + str(num)
+        #mydag.add_job(rpkmJob)
+        #num += 1
 
-        
     # write trimmomatic submit file
     trimCondorFile()
     # write fastqc submit file
@@ -758,17 +757,13 @@ def main():
         strandedness = 0
     htSeqFile(strandedness)
     # write RPKM submit file
-    rpkmFile()
-
-    
+    #rpkmFile()
     
     mydag.save('MasterDagman.dsf')
      
     # clean up unnessary files
     # remove original sam file, generated w/ bwa
     
-      
-
 if __name__ == "__main__":
     main()
 
