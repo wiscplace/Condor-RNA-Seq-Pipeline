@@ -76,7 +76,7 @@ def runRPKM( cwd, refer ):
     """
     Run RPKM normalization on all HTSeq files in current working directory.
     
-    Calls /home/GLBRCORG/mplace/scripts/RPKM.py
+    Calls RPKM.py
 
     RPKM.py -d <directory> -g REF.gff
 
@@ -107,7 +107,6 @@ def replaceWig( cwd ):
         log.write("\n")
         log.write(result)
 
-
 def main():
     """
     Main 
@@ -118,8 +117,9 @@ def main():
     for file in os.listdir():
         if file.endswith('final.sort.bam'):
             bam2wig(file)
+
+    cleanUp(currDir)
     #replaceWig(currDir)
-    #cleanUp(currDir)
 
 if __name__ == "__main__":
     main()
