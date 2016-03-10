@@ -714,6 +714,7 @@ def main():
 
         finalJob = Job('cleanAndFinalize.jtf', 'final_node')
         finalJob.pre_skip("1")
+        finalJob.add_var('job', 'job' + str(num))
         mydag.add_job(finalJob)
         
         #rpkmJob = Job('rpkm.jtf', 'job' + str(num))             # set up RPKM job
@@ -753,6 +754,7 @@ def main():
         strandedness = 0
     htSeqFile(strandedness)
     # write FINAL node submit file
+    # This will run RPKM and clean up the directory 
     finalFile()
     
     mydag.save('MasterDagman.dsf')
