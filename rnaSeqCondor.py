@@ -479,6 +479,7 @@ def finalFile():
         submit.write( "Universe                 = local\n" )
         submit.write( "Executable               = /home/GLBRCORG/mplace/projects/condor/Condor-RNA-Seq-Pipeline/rnaSeqCleanUp.py\n" )
         submit.write( "Arguments                = $(reference)\n" )
+        submit.write( "getenv                   = True\n")        
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = Yes\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
