@@ -89,7 +89,7 @@ RPKM.py
     Calculate RPKM for all HTSeq results in directory.  Bam files are 
     expected to be present as well.
 
-    usage: RPKM.py -d <directory> -g REF.gff [-f gene]
+    usage: RPKM.py -r genome [-f feature]
 
     example: ./RPKM.py  -r R64 
 
@@ -97,8 +97,8 @@ RPKM.py
 
     optional arguments:
     -h, --help       show this help message and exit
-    -g , --ref       Reference GFF file to use.
-    -f , --feature   Feature type to use w/ GFF file, default = CDS.
+    -f, --feature   Feature type to use w/ GFF file, default = CDS.
+    -r, --reference   Genome Name [R64, R64-1, PAN, Y22]
     -i, --info       Detailed description of program.
                             
 ******************************************************************************
@@ -107,12 +107,13 @@ rnaSeqCleanUp.py
     Purpose: Post Condor RNA-Seq pipeline run after all other condor jobs are
              complete in current directory.
                     
-    Input:   None 
+    Input:   Genome [R64, R64-1, PAN, Y22] 
                               
                                                    
     Output: The following directories are created fastq, alignment, htseq, wig
             and the associated files are moved into them, i.e. bam files go 
-            in the alignment directory.
+            in the alignment directory. RPKM is run on all HTSeq files output
+            in RPKM.results file.
 
 ******************************************************************************
 
