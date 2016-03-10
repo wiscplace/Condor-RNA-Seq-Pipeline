@@ -477,10 +477,11 @@ def finalFile():
     """
     with open('cleanAndFinalize.jtf', 'w') as submit:
         submit.write( "Universe                 = local\n" )
-        submit.write( "Executable               = rnaSeqCleanUp.py $(reference)\n" )
+        submit.write( "Executable               = /home/GLBRCORG/mplace/projects/condor/Condor-RNA-Seq-Pipeline/rnaSeqCleanUp.py\n" )
+        submit.write( "Arguments                = $(reference)\n" )
         submit.write( "Notification             = Never\n" )
-        #submit.write( "Should_Transfer_Files    = Yes\n" )
-        #submit.write( "When_To_Transfer_Output  = On_Exit\n" )
+        submit.write( "Should_Transfer_Files    = Yes\n" )
+        submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 4G\n" )
@@ -712,11 +713,11 @@ def main():
         mydag.add_job(htseqJob)
         num += 1
 
-        finalJob = Job('cleanAndFinalize.jtf', 'final_node')
-        finalJob.pre_skip("1")
-        finalJob.add_var('reference', reference)
-        finalJob.add_var('job', 'job' + str(num))
-        mydag.add_job(finalJob)
+    finalJob = Job('cleanAndFinalize.jtf', 'final_node')       # set up directory clean up
+    finalJob.pre_skip("1")
+    finalJob.add_var('reference', reference)
+    finalJob.add_var('job', 'job' + str(num))
+    mydag.add_job(finalJob)
 
     # write trimmomatic submit file
     trimCondorFile()
