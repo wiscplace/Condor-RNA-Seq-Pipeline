@@ -477,10 +477,10 @@ def finalFile():
     """
     with open('cleanAndFinalize.jtf', 'w') as submit:
         submit.write( "Universe                 = local\n" )
-        submit.write( "Executable               = rnaSeqCleanUp.py\n" )
+        submit.write( "Executable               = rnaSeqCleanUp.py $(reference)\n" )
         submit.write( "Notification             = Never\n" )
-        submit.write( "Should_Transfer_Files    = Yes\n" )
-        submit.write( "When_To_Transfer_Output  = On_Exit\n" )
+        #submit.write( "Should_Transfer_Files    = Yes\n" )
+        #submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 4G\n" )
@@ -714,19 +714,9 @@ def main():
 
         finalJob = Job('cleanAndFinalize.jtf', 'final_node')
         finalJob.pre_skip("1")
+        finalJob.add_var('reference', reference)
         finalJob.add_var('job', 'job' + str(num))
         mydag.add_job(finalJob)
-        
-        #rpkmJob = Job('rpkm.jtf', 'job' + str(num))             # set up RPKM job
-        #rpkmJob.pre_skip("1")
-        #rpkmJob.add_var('job', 'job' + str(num))
-        #rpkmJob.add_var('cwd', cwd)
-        #rpkmJob.add_var('gff', ref[reference][2])
-        #rpkmJob.add_var('out', 'RPKM.results')
-        #rpkmJob.add_var('genome', reference)
-        #parent = 'job' + str(num)
-        #mydag.add_job(rpkmJob)
-        #num += 1
 
     # write trimmomatic submit file
     trimCondorFile()
