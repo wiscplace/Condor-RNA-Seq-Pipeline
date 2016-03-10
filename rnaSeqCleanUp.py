@@ -15,6 +15,7 @@
 @Date:   3/1/2016
 """
 import os
+import re
 import subprocess
 import sys
 import reference as r
@@ -52,7 +53,7 @@ def cleanUp( cwd ):
     # delete sam files as they are no longer needed
     [ os.unlink(fn) for fn in os.listdir(cwd) if fn.endswith('.sam')]
 
-def bam2wig():
+def bam2wig( bamFile ):
     """
     Run bam2wig.pl, convert alignments from a Bam file into enumerated
     point data in a wig format. 
@@ -71,7 +72,7 @@ def bam2wig():
         log.write(result2)
         log.write("\n\n")    
 
-def runRPKM( cwd, refer):
+def runRPKM( cwd, refer ):
     """
     Run RPKM normalization on all HTSeq files in current working directory.
     
@@ -114,7 +115,9 @@ def main():
     reference = sys.argv[1]  # reference genome to use 
     currDir = os.getcwd()
     runRPKM(currDir, reference)
-    #bam2wig()
+    for file in os.listdir():
+        if file.endswith('final.sort.bam'):
+            bam2wig(file)
     #replaceWig(currDir)
     #cleanUp(currDir)
 
