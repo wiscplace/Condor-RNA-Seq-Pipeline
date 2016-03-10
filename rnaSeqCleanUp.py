@@ -4,7 +4,7 @@
 
 @Purpose: Post Condor RNA-Seq pipeline DAGman final process and clean up
           
-@Input:  None           
+@Input:  Reference genome to use, options are R64, R64-2, PAN, Y22            
                      
 @Output: The following directories are created fastq, alignment, htseq, wig
          and the associated files are moved into them, i.e. bam files go 
@@ -15,7 +15,9 @@
 @Date:   3/1/2016
 """
 import os
+import subprocess
 import sys
+import reference as r
 
 def cleanUp( cwd ):
     """
@@ -81,10 +83,11 @@ def runRPKM( cwd, refer):
     using CDS as the genome feature.
     
     """
-    program = '/home/GLBRCORG/mplace/scripts/RPKM.py'
-    gff     =  ref[refer][2] 
-    cmd     = [ program, '-d', cwd, '-g', gff ]
+    program = '/home/GLBRCORG/mplace/projects/condor/Condor-RNA-Seq-Pipeline/RPKM.py'
+    gff     =  r.ref[refer][2] 
+    cmd     = [ program, '-r', refer ]
     output  = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE ).communicate()
+    
 
 def replaceWig( cwd ):
     """
@@ -108,11 +111,12 @@ def main():
     """
     Main 
     """
+    reference = sys.argv[1]  # reference genome to use 
     currDir = os.getcwd()
-    runRPKM()
-    bam2wig()
-    replaceWig(currDir)
-    cleanUp(currDir)
+    runRPKM(currDir, reference)
+    #bam2wig()
+    #replaceWig(currDir)
+    #cleanUp(currDir)
 
 if __name__ == "__main__":
     main()
