@@ -9,6 +9,7 @@
 #   [3] = samtools index
 #   [4] = picard used for nameing
 # default reference = R64 (SGD R64-1-1 = UCSC sacCer3)
+# R64-2 = SGD R64-2-1
 # Y22 = reference of S. cerevisiae Y22-3 GLBRC sequenced strain
 # PAN = Pan-genome, composed of R64-2-1, sequence regions from Strope et. al
 #       , novel genes from Borneman strains and JAY291 (Argueso et.al)
@@ -29,5 +30,11 @@ ref = { 'R64' : ( "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R
                   "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta",
                   "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.gff",
                   "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta.fai",
-                  "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta" )    
+                  "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta" ),
+        
+        'R64-2' : ( "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/s.cerevisiae-R64-2.1",
+                    "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/S288C_reference_sequence_R64-2-1_20150113.fasta",
+                    "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/saccharomyces_cerevisiae_R64-2-1_20150113_noFasta.gff",
+                    "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/S288C_reference_sequence_R64-2-1_20150113.fsa.fai",
+                    "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/S288C_reference_sequence_R64-2-1_20150113.fasta" )
     }
