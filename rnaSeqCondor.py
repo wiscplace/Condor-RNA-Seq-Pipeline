@@ -626,7 +626,8 @@ def main():
         mydag.add_job(qcJob)
         qcJob.pre_skip("1")
         qcJob.add_var('read', trimName )
-        qcJob.add_var('job', 'job' + 'QC' + str(num) )        
+        qcJob.add_var('job', 'job' + 'QC' + str(num) )
+        qcJob.add_parent(trimJob)
         
         if aligner == 'bwamem':
             bwaJob =  Job('bwaCondor.jtf', 'job' + str(num))     # set bwa job 
