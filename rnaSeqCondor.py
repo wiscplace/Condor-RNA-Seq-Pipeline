@@ -252,8 +252,8 @@ def trimCondorFile():
         submit.write( "Transfer_Input_Files     = $(fastq)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
-        submit.write( "request_memory           = 8000\n" )
-        submit.write( "request_disk             = 400000\n" )
+        submit.write( "request_memory           = 8G\n" )
+        submit.write( "request_disk             = 4G\n" )
         submit.write( "Queue\n" )
     submit.close()        
 
@@ -265,19 +265,20 @@ def fastqcCondorFile():
     Command:
     /opt/bifxapps/FastQC/fastqc input.fastq
     """
-    with open('fastqcCondor.jtf', 'w') as submit: 
-        submit.write( "Universe                 = java\n" )
+    with open('qcCondor.jtf', 'w') as submit: 
+        submit.write( "Universe                 = vanilla\n" )
         submit.write( "Executable               = /opt/bifxapps/FastQC/fastqc\n" )
         submit.write( "getenv                   = True\n")
-        submit.write( "Arguments                = $(read)\n" )
+        submit.write( "Arguments                = \"$(read)\"\n" )
         submit.write( "Notification             = Never\n" )
+        submit.write( "transfer_executable      = False\n" )
         submit.write( "Should_Transfer_Files    = Yes\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(read)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
-        submit.write( "request_memory           = 20000\n" )
-        submit.write( "request_disk             = 5000000\n" )
+        submit.write( "request_memory           = 1G\n" )
+        submit.write( "request_disk             = 5G\n" )
         submit.write( "Queue" )
     submit.close()
 
@@ -612,17 +613,23 @@ def main():
     num = 1
     for f in fastq:
         
-        trimJob = Job('trimCondor.jtf', 'job' + str(num))   # set trimmomatic job file
+        trimJob = Job('trimCondor.jtf', 'job' + str(num))       # set trimmomatic job 
         mydag.add_job(trimJob)
         trimJob.pre_skip("1")
-        trimJob.add_var('job', 'job' + str(num))             # setup variable to substitue
+        trimJob.add_var('job', 'job' + str(num))                # setup variable to substitue
         trimJob.add_var('fastq', f )
         trimName = re.sub(r"fastq","trim.fastq", f)
         trimJob.add_var('outfile', trimName)  
         num += 1
+
+        qcJob = Job('qcCondor.jtf', 'job' + 'QC' + str(num) )               # setup Fastqc job, nothing depends on this job
+        mydag.add_job(qcJob)
+        qcJob.pre_skip("1")
+        qcJob.add_var('read', trimName )
+        qcJob.add_var('job', 'job' + 'QC' + str(num) )        
         
         if aligner == 'bwamem':
-            bwaJob =  Job('bwaCondor.jtf', 'job' + str(num))     # set bwa job file
+            bwaJob =  Job('bwaCondor.jtf', 'job' + str(num))     # set bwa job 
             mydag.add_job(bwaJob)   
             bwaJob.pre_skip("1")
             bwaJob.add_var('job', 'job' + str(num))              # setup variable to substitue
@@ -634,10 +641,10 @@ def main():
             num += 1
             alignerJob = bwaJob
         else:
-            bowtie2Job =  Job('bowtie2Condor.jtf', 'job' + str(num))     # set bwa job file
+            bowtie2Job =  Job('bowtie2Condor.jtf', 'job' + str(num))  # set bwa job 
             mydag.add_job(bowtie2Job)   
             bowtie2Job.pre_skip("1")
-            bowtie2Job.add_var('job', 'job' + str(num))              # setup variable to substitue
+            bowtie2Job.add_var('job', 'job' + str(num))               # setup variable to substitue
             bowtie2Job.add_var('reference', ref[reference][0])
             bowtie2Job.add_var('read', trimName )
             outName = re.sub(r"fastq","sam", trimName)
@@ -646,7 +653,7 @@ def main():
             num += 1
             alignerJob = bowtie2Job            
           
-        cleanJob =    Job('cleanSam.jtf', 'job' + str(num))  # set up clean sam job file
+        cleanJob =    Job('cleanSam.jtf', 'job' + str(num))  # set up clean sam job 
         cleanJob.pre_skip("1")
         cleanJob.add_var('job', 'job' + str(num))
         cleanJob.add_var( 'sam', outName )
