@@ -187,36 +187,13 @@ pydagman located: /home/GLBRCORG/mplace/anaconda3/lib/python3.4/site-packages/py
 """
 import argparse
 import os
+import reference as r
 import re
 import socket
+import subprocess
 import sys
 from pydagman.dagfile import Dagfile
 from pydagman.job import Job
-
-ref = { 'R64' : ( "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-1-1_20110203/s.cerevisiae-R64-1-1",
-                  "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-1-1_20110203/S288C_reference_sequence_R64-1-1_20110203.fasta",
-                  "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-1-1_20110203/saccharomyces_cerevisiae_R64-1-1_20110208_noFasta.gff",
-                  "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-1-1_20110203/S288C_reference_sequence_R64-1-1_20110203.fsa.fai",
-                  "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-1-1_20110203/S288C_reference_sequence_R64-1-1_20110203.fasta"),
-        
-        'Y22' : ( "/home/GLBRCORG/mplace/data/reference/Y22-3/Y22-3-bowtie",
-                  "/home/GLBRCORG/mplace/data/reference/Y22-3/Y22-3.fasta",
-                  "/home/GLBRCORG/mplace/data/reference/Y22-3/Y22-3_Final_GFF.gff",
-                  "/home/GLBRCORG/mplace/data/reference/Y22-3/Y22-3.fasta.fai",
-                  "/home/GLBRCORG/mplace/data/reference/Y22-3/Y22-3.fasta" ),
-        
-        'PAN' : ( "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1-bowtie",
-                  "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta",
-                  "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.gff",
-                  "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta.fai",
-                  "/home/GLBRCORG/mplace/data/reference/PanGenome/PanGenome-Final-R64-2-1.fasta" ),
-        
-        'R64-2' : ( "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/s.cerevisiae-R64-2.1",
-                    "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/S288C_reference_sequence_R64-2-1_20150113.fasta",
-                    "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/saccharomyces_cerevisiae_R64-2-1_20150113_noFasta.gff",
-                    "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/S288C_reference_sequence_R64-2-1_20150113.fsa.fai",
-                    "/home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-2-1_20150113/S288C_reference_sequence_R64-2-1_20150113.fasta" )
-    }
 
 def trimCondorFile():
     """
@@ -634,7 +611,7 @@ def main():
             mydag.add_job(bwaJob)   
             bwaJob.pre_skip("1")
             bwaJob.add_var('job', 'job' + str(num))              # setup variable to substitue
-            bwaJob.add_var('reference', ref[reference][1])
+            bwaJob.add_var('reference', r.ref[reference][1])
             bwaJob.add_var('read', trimName )
             outName = re.sub(r"fastq","sam", trimName)
             bwaJob.add_var('outfile', outName)
@@ -646,7 +623,7 @@ def main():
             mydag.add_job(bowtie2Job)   
             bowtie2Job.pre_skip("1")
             bowtie2Job.add_var('job', 'job' + str(num))               # setup variable to substitue
-            bowtie2Job.add_var('reference', ref[reference][0])
+            bowtie2Job.add_var('reference', r.ref[reference][0])
             bowtie2Job.add_var('read', trimName )
             outName = re.sub(r"fastq","sam", trimName)
             bowtie2Job.add_var('out', outName)
@@ -684,7 +661,7 @@ def main():
         samToBamJob.add_var('sam', samToBamName)
         bamName      = re.sub(r"sam", "bam", samToBamName)
         samToBamJob.add_var('bam', bamName)
-        samToBamJob.add_var('reference', ref[reference][3])
+        samToBamJob.add_var('reference', r.ref[reference][3])
         parent = 'job' + str(num)
         samToBamJob.add_parent(readGpJob)
         mydag.add_job(samToBamJob)
@@ -714,7 +691,7 @@ def main():
         htseqJob.pre_skip("1")
         htseqJob.add_var('job', 'job' + str(num))
         htseqJob.add_var('bam', sortName + '.bam' )
-        htseqJob.add_var('gff', ref[reference][2] )             
+        htseqJob.add_var('gff', r.ref[reference][2] )             
         htseqName = re.sub('.sam', '_HTseqOutput.txt', samToBamName)
         htseqJob.add_var('out', htseqName )
         parent = 'job' + str(num)
@@ -758,6 +735,8 @@ def main():
     finalFile()
     
     mydag.save('MasterDagman.dsf')
+    # Submit job to condor
+    subprocess.Popen(['condor_submit_dag', 'MasterDagman.dsf'])
     
 if __name__ == "__main__":
     main()
