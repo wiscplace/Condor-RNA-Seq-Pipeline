@@ -214,9 +214,9 @@ def main():
     htseqFiles   = []         # cds files to process, in curr working dir
     
     cmdparser = argparse.ArgumentParser(description="Run RPKM on all HTSeq files in Current Directory.",
-                                        usage='%(prog)s -d <directory> -g REF.gff [-f gene] ' ,prog='RPKM.py'  )                                  
+                                        usage='%(prog)s -r genome [-f gene] ' ,prog='RPKM.py'  )                                  
     cmdparser.add_argument('-f', '--feature', action='store',   dest='FEATURE', help='Feature type to use w/ GFF file, default = CDS.', metavar='')
-    cmdparser.add_argument('-r', '--reference', action='store', dest='REFERENCE', help='Genome Reference for genome size information.', metavar='')
+    cmdparser.add_argument('-r', '--reference', action='store', dest='REFERENCE', help='Genome Name [R64, R64-1, PAN, Y22]', metavar='')
     cmdparser.add_argument('-i', '--info', action='store_true', dest='INFO', help='Detailed description of program.')
     cmdResults = vars(cmdparser.parse_args())
     
