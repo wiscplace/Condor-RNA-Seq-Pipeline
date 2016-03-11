@@ -60,6 +60,12 @@ def cleanUp( cwd ):
         os.mkdir( "fastqc" )
     fastqcDir = cwd + "/fastqc/"
     [ os.rename( (cwd + fn), (fastqcDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("trim_fastqc.zip") ]
+    if not os.path.exists( cwd + 'jobinfo'):
+        os.mkdir( "jobinfo" )
+    jobDir = cwd + "/jobinfo/"
+    extension = [ ".jtf", ".dsf" ]
+    [ os.rename( (cwd + fn), (jobDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(tuple(extension)) ]
+    
     # delete sam files as they are no longer needed
     [ os.unlink(fn) for fn in os.listdir(cwd) if fn.endswith('.sam')]
 
