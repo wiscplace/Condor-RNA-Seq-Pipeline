@@ -2,7 +2,7 @@ rnaSeqCondor.py
   
 Purpose:
 
-    Condor implementation of the Gasch lab RNA-Seq pipeline.
+    HTCondor implementation of the Gasch lab RNA-Seq pipeline.
 
     All fastq files in the working directory will be processed.
 
@@ -63,25 +63,24 @@ Outline of steps & commands used in pipeline:
 
          /opt/bifxapps/biotoolbox/scripts/bam2wig.pl --in bamFile --pos mid --strand --rpm --out outFile
 
-  9) findreplace_WIG.pl
 
-         /home/GLBRCORG/mplace/scripts/findreplace_WIG.pl
+  The results are organized into the following subdirectories:
 
-         The results are organized into the following subdirectories:
-
-         alignments/ 
+        alignments/     -- bam files 
                                              
-         fastq/
+        fastq/          -- all fastq files
                                                              
-         fastqc/
+        fastqc/         -- Fastqc results, zipped
                                                                              
-         htseq/ 
+        htseq/          -- HTSeq results 
                                                                                              
-         log/ 
+        log/            -- log and error files
                                                                                                              
-         wig/ 
+        wig/            -- wig files for visualization
                                                                                                                              
-         RPKM results are written to a file called: RPKM.results
+        jobinfo/        -- condor submit template and dag files
+
+        RPKM results are written to a file called: RPKM.results
 
 *******************************************************************************
 RPKM.py
@@ -110,10 +109,10 @@ rnaSeqCleanUp.py
     Input:   Genome [R64, R64-1, PAN, Y22] 
                               
                                                    
-    Output: The following directories are created fastq, alignment, htseq, wig
-            and the associated files are moved into them, i.e. bam files go 
-            in the alignment directory. RPKM is run on all HTSeq files output
-            in RPKM.results file.
+    Output: The following directories are created alignment, fastq, fastqc, 
+            htseq,log, wig and the associated files are moved into them, 
+            i.e. bam files go in the alignment directory. RPKM is run on 
+            all HTSeq files with results in RPKM.results file.
 
 ******************************************************************************
 
