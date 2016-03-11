@@ -58,7 +58,7 @@ def cleanUp( cwd ):
     # make a directory for fastqc results
     if not os.path.exists( cwd + 'fastqc'):
         os.mkdir( "fastqc" )
-    fastqcDir = cwd + "/fastqc/")
+    fastqcDir = cwd + "/fastqc/"
     [ os.rename( (cwd + fn), (fastqcDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("trim_fastqc.zip") ]
     # delete sam files as they are no longer needed
     [ os.unlink(fn) for fn in os.listdir(cwd) if fn.endswith('.sam')]
