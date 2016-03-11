@@ -28,28 +28,38 @@ def cleanUp( cwd ):
     """
     cwd = cwd + "/"
     # move bam files to alignment directories
-    os.mkdir( "alignment" )
+    if not os.path.exists( cwd + 'alignment'):
+        os.mkdir( "alignment" )
     bamDir = cwd + "/alignment/"
     [ os.rename( (cwd + fn), (bamDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".bam") ]
     [ os.rename( (cwd + fn), (bamDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".bai") ] 
     # make wig directory
-    os.mkdir( "wig" )
+    if not os.path.exists( cwd + 'wig'):
+        os.mkdir( "wig" )
     widDir = cwd + "/wig/"
     [ os.rename( (cwd + fn), (widDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".wig.gz") ]
     # make HTseq directory
-    os.mkdir( "htseq" )
+    if not os.path.exists( cwd + 'htseq'):
+        os.mkdir( "htseq" )
     htsDir = cwd + "/htseq/"
     [ os.rename( (cwd + fn), (htsDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("_HTseqOutput.txt") ]
     # make log file directory
-    os.mkdir( "log" )
+    if not os.path.exists( cwd + 'log'):
+        os.mkdir( "log" )
     logDir = cwd + "/log/"
     [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".log") ]
     [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".err") ]
     [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".out") ]  
     # make a directory for sequence reads
-    os.mkdir( "fastq" )
+    if not os.path.exists( cwd + 'fastq'):
+        os.mkdir( "fastq" )
     seqDir = cwd + "/fastq/"
     [ os.rename( (cwd + fn), (seqDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".fastq") ]
+    # make a directory for fastqc results
+    if not os.path.exists( cwd + 'fastqc'):
+        os.mkdir( "fastqc" )
+    fastqcDir = cwd + "/fastqc/")
+    [ os.rename( (cwd + fn), (fastqcDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("trim_fastqc.zip") ]
     # delete sam files as they are no longer needed
     [ os.unlink(fn) for fn in os.listdir(cwd) if fn.endswith('.sam')]
 
