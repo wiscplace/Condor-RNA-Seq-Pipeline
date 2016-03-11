@@ -22,7 +22,7 @@ import reference as r
 
 def cleanUp( cwd ):
     """
-    Clean up and move output files.
+    Clean up and move output files to appropriate directory.
     os.mkdir()
     os.rename( currentPath/, newPath )
     """
@@ -98,7 +98,6 @@ def runRPKM( cwd, refer ):
 
     The assumption is that as part of this pipeline HTSeq has been run
     using CDS as the genome feature.
-    
     """
     program = '/home/GLBRCORG/mplace/projects/condor/Condor-RNA-Seq-Pipeline/RPKM.py'
     gff     =  r.ref[refer][2] 
@@ -135,7 +134,6 @@ def main():
             bam2wig(file)
 
     cleanUp(currDir)
-    #replaceWig(currDir)
 
 if __name__ == "__main__":
     main()
