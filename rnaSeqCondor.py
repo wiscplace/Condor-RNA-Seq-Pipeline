@@ -327,12 +327,14 @@ def cleanSamFile():
     """
     Create condor job template file to run picard tools CleanSam on bwa results.
     """
+    cwd = os.getcwd()
+    tmp = cwd + '/tmp'
     with open('cleanSam.jtf', 'w') as submit:
         submit.write( "Universe                 = java\n" )
         submit.write( "Executable               = /opt/bifxapps/picard/picard.jar\n" )
         submit.write( "jar_files                = /opt/bifxapps/picard/picard.jar\n" )
-        submit.write( "java_vm_args             = -Xmx8g\n" )
-        submit.write( "Arguments                = picard.cmdline.PicardCommandLine CleanSam I=$(sam) O=$(outfile) QUIET=true VERBOSITY=null TMP_DIR=/tmp\n" )
+        submit.write( "java_vm_args             = -Xmx32g\n" )
+        submit.write( "Arguments                = picard.cmdline.PicardCommandLine CleanSam I=$(sam) O=$(outfile) QUIET=true VERBOSITY=null TMP_DIR=" + tmp + "\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = if_needed\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
@@ -340,28 +342,30 @@ def cleanSamFile():
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 32G\n" )
-        submit.write( "request_disk             = 40G\n" )
+        submit.write( "request_disk             = 100G\n" )
         submit.write( "Queue" )
-    submit.close()
+        submit.close()
 
 def addReadGpSam(ref):
     """
     Create condor job template file to add RG header to
     sam file using Picard tools.
     """
+    cwd = os.getcwd()
+    tmp = cwd + '/tmp'
     with open('addReadGpSam.jtf', 'w') as submit:
         submit.write( "Universe                 = java\n" )
         submit.write( "Executable               = /opt/bifxapps/picard/picard.jar\n" )
         submit.write( "jar_files                = /opt/bifxapps/picard/picard.jar\n" )
-        submit.write( "java_vm_args             = -Xmx8g\n" )
-        submit.write( "Arguments                = picard.cmdline.PicardCommandLine AddOrReplaceReadGroups I=$(cleanSam) O=$(outfile) SO=coordinate LB=" + ref + " PL=ILLUMINA PU=unknown SM=$(fastq) VALIDATION_STRINGENCY=LENIENT TMP_DIR=/tmp\n" )
+        submit.write( "java_vm_args             = -Xmx32g\n" )
+        submit.write( "Arguments                = picard.cmdline.PicardCommandLine AddOrReplaceReadGroups I=$(cleanSam) O=$(outfile) SO=coordinate LB=" + ref + " PL=ILLUMINA PU=unknown SM=$(fastq) VALIDATION_STRINGENCY=LENIENT TMP_DIR=" + tmp + "\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = if_needed\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(cleanSam)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
-        submit.write( "request_memory           = 8G\n" )
+        submit.write( "request_memory           = 32G\n" )
         submit.write( "request_disk             = 40G\n" )
         submit.write( "Queue" )
     submit.close()  
@@ -740,6 +744,8 @@ def main():
     finalFile()
     
     mydag.save('MasterDagman.dsf')
+
+    os.mkdir( cwd + '/tmp')
     # Submit job to condor
     subprocess.Popen(['condor_submit_dag', 'MasterDagman.dsf'])
     
