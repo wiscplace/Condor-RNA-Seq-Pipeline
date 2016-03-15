@@ -577,6 +577,8 @@ def main():
             aligner = 'bwamem'
         else:
             aligner='bowtie2'
+    else:
+        aligner ='bowtie2'
 
     # Get input file listing fastq files to process
     for f in os.listdir(cwd):
