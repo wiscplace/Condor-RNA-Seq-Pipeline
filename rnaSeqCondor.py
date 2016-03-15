@@ -569,6 +569,8 @@ def main():
     else:
         reference = 'R64'
 
+    print("Using reference %s" %( reference))
+
     # Get aligner to use
     if cmdResults['ALIGNER'] is not None:
         if cmdResults['ALIGNER'] == 'bwamem':
