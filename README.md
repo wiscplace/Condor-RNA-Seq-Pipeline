@@ -105,10 +105,9 @@ rnaSeqCleanUp.py
     Input:   Genome [R64, R64-1, PAN, Y22] 
                               
                                                    
-    Output: The following directories are created alignment, fastq, fastqc, 
-            htseq,log, wig and the associated files are moved into them, 
-            i.e. bam files go in the alignment directory. RPKM is run on 
-            all HTSeq files with results in RPKM.results file.
+    Output: The following directories are created fastqc, htseq,log, wig 
+            and the associated files are moved into them. 
+            RPKM is run on all HTSeq files with results in RPKM.results file.
 
 ******************************************************************************
 
