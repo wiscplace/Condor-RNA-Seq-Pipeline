@@ -17,7 +17,9 @@ Input:  reference, single
         S.cerevisiae PanGenome reference 
         GLBRC strain Y22-3 S.cerevisiae reference
    
-Output: Each step has its own condor job template file (.jtf) and output see below:
+Output: Each step has its own condor job template file (.jtf)
+        Only htseq, fastqc, RPKM.results, log & error files are retained.
+        All alignment files are deleted after the job completes.  
 
 Steps:
     Trimmomatic         -- http://www.usadellab.org/cms/?page=trimmomatic
@@ -228,6 +230,8 @@ def trimCondorFile():
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(fastq)\n" )
+        submit.write( "Notification             = Error\n")
+        submit.write( "Notify_user              = mplace@wisc.edu\n")
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 8G\n" )
@@ -253,6 +257,8 @@ def fastqcCondorFile():
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(read)\n" )
+        submit.write( "Notification             = Error\n")
+        submit.write( "Notify_user              = mplace@wisc.edu\n")
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 8G\n" )
@@ -294,6 +300,8 @@ def bowtie2CondorFile():
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(read)\n" )
+        submit.write( "Notification             = Error\n")
+        submit.write( "Notify_user              = mplace@wisc.edu\n")
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_cpus             = 8\n" )
@@ -317,6 +325,8 @@ def bwaCondorFile():
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(reference),$(read)\n" )
         submit.write( "Output			= $(outfile)\n" )
+        submit.write( "Notification             = Error\n")
+        submit.write( "Notify_user              = mplace@wisc.edu\n")
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_cpus             = 8\n" )
@@ -342,6 +352,8 @@ def cleanSamFile():
         submit.write( "Should_Transfer_Files    = Yes\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(sam)\n" )
+        submit.write( "Notification             = Error\n")
+        submit.write( "Notify_user              = mplace@wisc.edu\n")
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 8G\n" )
@@ -367,6 +379,8 @@ def addReadGpSam(ref):
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(cleanSam)\n" )
+        submit.write( "Notification             = Error\n")
+        submit.write( "Notify_user              = mplace@wisc.edu\n")
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 8G\n" )
@@ -387,6 +401,8 @@ def samToBamFile():
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(reference),$(sam)\n" )
+        submit.write( "Notification             = Error\n")
+        submit.write( "Notify_user              = mplace@wisc.edu\n")
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 8G\n" )
@@ -407,6 +423,8 @@ def sortSamFile():
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(bam)\n" )
+        submit.write( "Notification             = Error\n")
+        submit.write( "Notify_user              = mplace@wisc.edu\n")
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 32G\n" )
@@ -427,6 +445,8 @@ def indexBamFile():
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(bam)\n" )
+        submit.write( "Notification             = Error\n")
+        submit.write( "Notify_user              = mplace@wisc.edu\n")
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 32G\n" )
@@ -452,6 +472,8 @@ def htSeqFile( strandedness ):
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(bam)\n" )
         submit.write( "output                   = $(out)\n" )
+        submit.write( "Notification             = Error\n")
+        submit.write( "Notify_user              = mplace@wisc.edu\n")
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 32G\n" )
@@ -474,6 +496,8 @@ def finalFile():
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
+        submit.write( "Notification             = Complete\n")
+        submit.write( "Notify_user              = mplace@wisc.edu\n")
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
         submit.write( "request_memory           = 16G\n" )
@@ -488,7 +512,8 @@ def main():
     cmdparser = argparse.ArgumentParser( description="RNA-Seq Pipeline, condor version",
                                          usage='%(prog)s -f <fastq file list.txt> [optional args: -a -r -d -ref ]', prog='rnaSeqCondor.py')
     cmdparser.add_argument('-a', '--aligner', action='store',      dest='ALIGNER', help='Default aligner is Bowtie2, to use Bwa mem: -a bwamem')
-    cmdparser.add_argument('-d', '--detail',  action='store_true', dest='DETAIL',  help='Print a more detailed description of program.')    
+    cmdparser.add_argument('-d', '--detail',  action='store_true', dest='DETAIL',  help='Print a more detailed description of program.')
+    cmdparser.add_argument('-i', '--wfid',      action='store',    dest='WFID',    help='WorkFlow ID is required.')
     cmdparser.add_argument('-r', '--reverse', action='store_true', dest='REVERSE', help='HTSeq -s reverse, for Biotech GEC data, optional.')
     cmdparser.add_argument('-ref', '--reference', action='store',  dest='REFERENCE', help='Reference R64 (SGD R64-1-1), R64-2 (SGD R64-2-1), Y22-3 (GLBRC), PAN (PanGenome)' )
     cmdResults = vars(cmdparser.parse_args())
@@ -512,10 +537,11 @@ def main():
         print("\nPlease use a dedicated directory for running pipeline.")
         print("If your are running this manually do the following:\n")
         print("\tCreate your directory and copy or link your fastq files into that directory.\n")
-        print("To run default enter:  /home/GLBRCORG/mplace/scripts/rnaSeqCondor.py \n")
+        print("To run default enter:  /home/GLBRCORG/mplace/scripts/rnaSeqCondor.py -i 53 \n")
         print("Optional Parameters:") 
-        print("\t-r  this will use \"-s reverse\" parameter for HTSeq.\n")
         print("\t-a  bwamem changes aligner from default bowtie2 to bwa mem\n")
+        print("\t-i  GLOW WorkFlow ID number (required).\n")
+        print("\t-r  this will use \"-s reverse\" parameter for HTSeq.\n")
         print("\t-ref  change default reference, usage:  -ref Y22-3")
         print("\t    Current Reference List:")
         print("\t\tR64-1-1 -- default equivalent to UCSC sacCer3" )
@@ -529,7 +555,7 @@ def main():
         print("  2) Fastqc ")
         print("\t/opt/bifxapps/FastQC/fastqc trimmed_fastq\n")
         print("  3) Alignment ")
-        print("\tBowtie2 -p 8 --phred33 -N 1 -x  referenceFile -U  trimmed_fastq -S outFile" )
+        print("\tbowtie2-align-s -p 8 --phred33 -N 1 -x  referenceFile -U  trimmed_fastq -S outFile" )
         print("\tor")
         print("\tbwa mem -t 8 -M referenceFile trimmed_fastq\n")
         print("  4) Picard-tools ")
@@ -550,17 +576,28 @@ def main():
         print("  9) findreplace_WIG.pl")
         print("\t/home/GLBRCORG/mplace/scripts/findreplace_WIG.pl\n")
         print("The results are organized into the following subdirectories:")
-        print("\t alignments/ fastq/ fastqc/ htseq/ log/ wig/ ")
+        print("\t fastqc/ htseq/ log/ wig/ ")
         print("\t RPKM results are written to a file called: RPKM.results\n")
+        print("\t All alignment files are deleted to save disk space\n")
         print("This script is designed to run on the GLBRC condor submit node scarcity-cm")
         print("See Mike Place for problems with this script.")
         sys.exit(1)
-
+        
+    # Is this being run on scarcity's condor submit node?
     hostname = socket.gethostname()
     if hostname != 'scarcity-cm.glbrc.org':
         print("Program must be run on scarcity's condor submit node.")
         print("\tssh to scarcity-cm.glbrc.org")
         sys.exit(1)
+        
+    # check for GLOW workflow ID number
+    if cmdResults['WFID']:
+        workflowID = cmdResults['WFID']
+    else:
+        print("")
+        print(" WorkFlow ID is required")
+        cmdparser.print_help()
+        sys.exit(1)        
 
     # Get reference genome to use
     if cmdResults['REFERENCE'] is not None:
@@ -749,7 +786,7 @@ def main():
 
     os.mkdir( cwd + '/tmp')
     # Submit job to condor
-    subprocess.Popen(['condor_submit_dag', 'MasterDagman.dsf'])
+    subprocess.Popen(['condor_submit_dag', '-dont_suppress_notification','MasterDagman.dsf'])
     
 if __name__ == "__main__":
     main()
