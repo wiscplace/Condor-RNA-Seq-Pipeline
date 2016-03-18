@@ -786,7 +786,7 @@ def main():
 
     os.mkdir( cwd + '/tmp')
     # Submit job to condor
-    subprocess.Popen(['condor_submit_dag', '-dont_suppress_notification','MasterDagman.dsf'])
+    subprocess.Popen(['condor_submit_dag','MasterDagman.dsf'])
     
 if __name__ == "__main__":
     main()
