@@ -246,7 +246,7 @@ def main():
     htSeqDir = os.getcwd()
     # Here we are assuming the .fai index file for reference exists
     for f in os.listdir(htSeqDir):
-        if re.search(r'\_HTseqOutput.txt$',f):
+        if re.search(r'\_HTseqOutput.txt.gz$',f):
             htseqFiles.append(f)
         
     if cmdResults['FEATURE']:
@@ -273,7 +273,7 @@ def main():
         log.close()
 
     for ht in os.listdir():
-        if ht.endswith('_HTseqOutput.txt'):
+        if ht.endswith('_HTseqOutput.txt.gz'):
             htList.append(ht)
 
     if not htList:
