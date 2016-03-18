@@ -222,6 +222,7 @@ def trimCondorFile():
         submit.write( "Executable               = /opt/bifxapps/Trimmomatic-0.30/trimmomatic-0.30.jar\n" )
         submit.write( "jar_files                = /opt/bifxapps/Trimmomatic-0.30/trimmomatic-0.30.jar\n" )
         submit.write( "java_vm_args             = -Xmx6g\n" )
+        submit.write( "getenv                   = True\n")
         submit.write( "Arguments                = org.usadellab.trimmomatic.Trimmomatic SE -phred33 $(fastq) $(outfile) LEADING:3 TRAILING:3 SLIDINGWINDOW:3:30 MINLEN:36\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
@@ -310,6 +311,7 @@ def bwaCondorFile():
         submit.write( "Universe                 = vanilla\n" )
         submit.write( "Executable               = /opt/bifxapps/bin/bwa\n" )
         submit.write( "Arguments                = mem -t 8 -M $(reference) $(read)\n" )
+        submit.write( "getenv                   = True\n")
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
@@ -334,8 +336,8 @@ def cleanSamFile():
         submit.write( "Executable               = /opt/bifxapps/picard/picard.jar\n" )
         submit.write( "jar_files                = /opt/bifxapps/picard/picard.jar\n" )
         submit.write( "java_vm_args             = -Xmx8g\n" )
+        submit.write( "getenv                   = True\n")
         submit.write( "Arguments                = picard.cmdline.PicardCommandLine CleanSam I=$(sam) O=$(outfile) TMP_DIR=" + tmp + "\n" )
-        #submit.write( "Arguments                = picard.cmdline.PicardCommandLine CleanSam I=$(sam) O=$(outfile) QUIET=true VERBOSITY=null TMP_DIR=" + tmp + "\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = Yes\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
@@ -359,6 +361,7 @@ def addReadGpSam(ref):
         submit.write( "Executable               = /opt/bifxapps/picard/picard.jar\n" )
         submit.write( "jar_files                = /opt/bifxapps/picard/picard.jar\n" )
         submit.write( "java_vm_args             = -Xmx8g\n" )
+        submit.write( "getenv                   = True\n")
         submit.write( "Arguments                = picard.cmdline.PicardCommandLine AddOrReplaceReadGroups I=$(cleanSam) O=$(outfile) SO=coordinate LB=" + ref + " PL=ILLUMINA PU=unknown SM=$(fastq) VALIDATION_STRINGENCY=LENIENT TMP_DIR=" + tmp + "\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
@@ -378,6 +381,7 @@ def samToBamFile():
     with open('samToBam.jtf', 'w') as submit:
         submit.write( "Universe                 = vanilla\n" )
         submit.write( "Executable               = /opt/bifxapps/bin/samtools\n" )
+        submit.write( "getenv                   = True\n")
         submit.write( "Arguments                = view -bS -t $(reference) -o $(bam) $(sam)\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
@@ -397,6 +401,7 @@ def sortSamFile():
     with open('sortSam.jtf', 'w') as submit:
         submit.write( "Universe                 = vanilla\n" )
         submit.write( "Executable               = /opt/bifxapps/bin/samtools\n" )
+        submit.write( "getenv                   = True\n")
         submit.write( "Arguments                = sort $(bam) $(out)\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
@@ -416,6 +421,7 @@ def indexBamFile():
     with open('indexBam.jtf', 'w') as submit:
         submit.write( "Universe                 = vanilla\n" )
         submit.write( "Executable               = /opt/bifxapps/bin/samtools\n" )
+        submit.write( "getenv                   = True\n")
         submit.write( "Arguments                = index $(bam)\n" )
         submit.write( "Notification             = Never\n" )
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
@@ -462,6 +468,7 @@ def finalFile():
     with open('cleanAndFinalize.jtf', 'w') as submit:
         submit.write( "Universe                 = local\n" )
         submit.write( "Executable               = /home/GLBRCORG/mplace/projects/condor/Condor-RNA-Seq-Pipeline/rnaSeqCleanUp.py\n" )
+        submit.write( "getenv                   = True\n")
         submit.write( "Arguments                = $(reference)\n" )
         submit.write( "getenv                   = True\n")        
         submit.write( "Notification             = Never\n" )
@@ -473,12 +480,6 @@ def finalFile():
         submit.write( "request_disk             = 50G\n" )
         submit.write( "Queue" )
     submit.close()
-
-def bamToWigFile():
-    """
-    Create wig file for viewing alignments in mochi view
-    """
-    pass
 
 def main():
     """
