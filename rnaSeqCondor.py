@@ -317,9 +317,9 @@ def bwaCondorFile():
         submit.write( "Output			= $(outfile)\n" )
         submit.write( "Error                    = $(job).submit.err\n" )
         submit.write( "Log                      = $(job).submit.log\n" )
-        #submit.write( "request_cpus             = 8\n" )
-        #submit.write( "request_memory           = 32G\n" )
-        #submit.write( "request_disk             = 50G\n" )
+        submit.write( "request_cpus             = 8\n" )
+        submit.write( "request_memory           = 32G\n" )
+        submit.write( "request_disk             = 50G\n" )
         submit.write( "Queue" )
     submit.close()
 
