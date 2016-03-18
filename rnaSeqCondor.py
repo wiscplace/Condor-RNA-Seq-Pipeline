@@ -292,7 +292,8 @@ def bowtie2CondorFile():
     """
     with open('bowtie2Condor.jtf', 'w') as submit: 
         submit.write( "Universe                 = vanilla\n" )
-        submit.write( "Executable               = /opt/bifxapps/bin/bowtie2-align-s\n" )
+        #submit.write( "Executable               = /opt/bifxapps/bin/bowtie2-align-s\n" )
+        submit.write( "Executable               = /opt/bifxapps/bin/bowtie2\n" )
         submit.write( "Environment              =\"BOWTIE_INDEXES=$(reference)\"\n")
         submit.write( "getenv                   = True\n" )
         submit.write( "Arguments                = -p 8 --phred33 -N 1 -x $(reference) -U $(read) -S $(out)\n" )
