@@ -29,7 +29,7 @@ def cleanUp( cwd ):
     """
     cwd = cwd + "/"
     # remove bam files
-    [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith(".bam") ]
+    [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith(".bam.gz") ]
     [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith(".bai") ] 
 
     # make wig directory
@@ -42,10 +42,10 @@ def cleanUp( cwd ):
     if not os.path.exists( cwd + 'htseq'):
         os.mkdir( "htseq" )
     htsDir = cwd + "/htseq/"
-    [ os.rename( (cwd + fn), (htsDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("_HTseqOutput.txt") ]
+    [ os.rename( (cwd + fn), (htsDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("_HTseqOutput.txt.gz") ]
 
     # write a list of fastq files used to log file
-    [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith(".trim.fastq")]
+    [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith(".trim.fastq.gz")]
     with open('inputFileList.log', 'w') as out:
         for fn in os.listdir(cwd):
             if fn.endswith(".fastq"):
@@ -67,14 +67,14 @@ def cleanUp( cwd ):
     [ os.rename( (cwd + fn), (fastqcDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("trim_fastqc") ]
 
     # make a directory for the condor job files
-    if not os.path.exists( cwd + 'jobinfo'):
-        os.mkdir( "jobinfo" )
-    jobDir = cwd + "/jobinfo/"
-    extension = [ ".jtf" ]
-    [ os.rename( (cwd + fn), (jobDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(tuple(extension)) ]
+    #if not os.path.exists( cwd + 'jobinfo'):
+    #    os.mkdir( "jobinfo" )
+    #jobDir = cwd + "/jobinfo/"
+    #extension = [ ".jtf" ]
+    #[ os.rename( (cwd + fn), (jobDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(tuple(extension)) ]
     
     # delete sam files as they are no longer needed
-    [ os.unlink(fn) for fn in os.listdir(cwd) if fn.endswith('.sam')]
+    [ os.unlink(fn) for fn in os.listdir(cwd) if fn.endswith('.sam.gz')]
 
 def bam2wig( bamFile ):
     """

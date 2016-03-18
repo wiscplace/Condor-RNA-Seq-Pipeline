@@ -87,7 +87,7 @@ Bowtie2:
     -S $OUT.sam    # output sam file
 
     on GLBRC scarcity:
-    /opt/bifxapps/bin/bowtie2-align-s
+    /opt/bifxapps/bin/bowtie2
     
     OUTPUT: sam file
 
@@ -274,25 +274,11 @@ def bowtie2CondorFile():
     
     /opt/bifxapps/bin/bowtie2 -p 8 --phred33 -N 1
     -x /home/GLBRCORG/mplace/data/reference/S288C_reference_genome_R64-1-1_20110203/s.cerevisiae-R64-1-1
-    -U run333.YPS1009.10kreads.trim.fastq -S ck.YPS1009.sam
+    -U run333.YPS1009.10kreads.trim.fastq.gz -S OUTFILE
 
-    Here I am using bowtie2-align-s, from the bowtie2 docs:
-
-        The bowtie2, bowtie2-build and bowtie2-inspect executables are actually wrapper scripts that
-        call binary programs as appropriate. The wrappers shield users from having to distinguish between
-        "small" and "large" index formats, discussed briefly in the following section. Also,
-        the bowtie2 wrapper provides some key functionality, like the ability to handle compressed
-        inputs, and the fucntionality for --un, --al and related options.
-        It is recommended that you always run the bowtie2 wrappers and not run the binaries directly.
-        Small and large indexes
-        bowtie2-build can index reference genomes of any size. For genomes less than about 4 billion
-        nucleotides in length, bowtie2-build builds a "small" index using 32-bit numbers in various
-        parts of the index. When the genome is longer, bowtie2-build builds a "large" index using
-        64-bit numbers. Small indexes are stored in files with the .bt2 extension
     """
     with open('bowtie2Condor.jtf', 'w') as submit: 
         submit.write( "Universe                 = vanilla\n" )
-        #submit.write( "Executable               = /opt/bifxapps/bin/bowtie2-align-s\n" )
         submit.write( "Executable               = /opt/bifxapps/bin/bowtie2\n" )
         submit.write( "Environment              =\"BOWTIE_INDEXES=$(reference)\"\n")
         submit.write( "getenv                   = True\n" )
@@ -556,7 +542,7 @@ def main():
         print("  2) Fastqc ")
         print("\t/opt/bifxapps/FastQC/fastqc trimmed_fastq\n")
         print("  3) Alignment ")
-        print("\tbowtie2-align-s -p 8 --phred33 -N 1 -x  referenceFile -U  trimmed_fastq -S outFile" )
+        print("\tbowtie2 -p 8 --phred33 -N 1 -x  referenceFile -U  trimmed_fastq -S outFile" )
         print("\tor")
         print("\tbwa mem -t 8 -M referenceFile trimmed_fastq\n")
         print("  4) Picard-tools ")
