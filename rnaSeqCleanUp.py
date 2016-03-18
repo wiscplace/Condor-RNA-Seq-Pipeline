@@ -22,17 +22,15 @@ import reference as r
 
 def cleanUp( cwd ):
     """
-    Clean up and move output files to appropriate directory.
+    Delete unneeded files and move output files to appropriate directory
     os.mkdir()
     os.rename( currentPath/, newPath )
+    os.remove()
     """
     cwd = cwd + "/"
-    # move bam files to alignment directories
-    if not os.path.exists( cwd + 'alignment'):
-        os.mkdir( "alignment" )
-    bamDir = cwd + "/alignment/"
-    [ os.rename( (cwd + fn), (bamDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".bam") ]
-    [ os.rename( (cwd + fn), (bamDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".bai") ] 
+    # remove bam files
+    [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith(".bam") ]
+    [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith(".bai") ] 
 
     # make wig directory
     if not os.path.exists( cwd + 'wig'):
@@ -46,19 +44,20 @@ def cleanUp( cwd ):
     htsDir = cwd + "/htseq/"
     [ os.rename( (cwd + fn), (htsDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("_HTseqOutput.txt") ]
 
+    # write a list of fastq files used to log file
+    [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith(".trim.fastq")]
+    with open('inputFileList.log', 'w') as out:
+        for fn in os.listdir(cwd):
+            if fn.endswith(".fastq"):
+                out.write(fn)
+                out.write("\n")
+
     # make log file directory
     if not os.path.exists( cwd + 'log'):
         os.mkdir( "log" )
     logDir = cwd + "/log/"
     [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".log") ]
-    [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".err") ]
-    [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".out") ]  
-
-    # make a directory for sequence reads
-    if not os.path.exists( cwd + 'fastq'):
-        os.mkdir( "fastq" )
-    seqDir = cwd + "/fastq/"
-    [ os.rename( (cwd + fn), (seqDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".fastq") ]
+    [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".err") ] 
 
     # make a directory for fastqc results
     if not os.path.exists( cwd + 'fastqc'):
@@ -71,7 +70,7 @@ def cleanUp( cwd ):
     if not os.path.exists( cwd + 'jobinfo'):
         os.mkdir( "jobinfo" )
     jobDir = cwd + "/jobinfo/"
-    extension = [ ".jtf", ".dsf" ]
+    extension = [ ".jtf" ]
     [ os.rename( (cwd + fn), (jobDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(tuple(extension)) ]
     
     # delete sam files as they are no longer needed
