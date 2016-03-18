@@ -21,7 +21,7 @@ Outline of steps & commands used in pipeline:
 
   3) Alignment 
 
-          Bowtie2-align-s -p 8 --phred33 -N 1 -x  referenceFile -U  trimmed_fastq -S outFile
+          Bowtie2 -p 8 --phred33 -N 1 -x  referenceFile -U  trimmed_fastq -S outFile
                                               
           or
 
@@ -66,10 +66,6 @@ Outline of steps & commands used in pipeline:
 
   The results are organized into the following subdirectories:
 
-        alignments/     -- bam files 
-                                             
-        fastq/          -- all fastq files
-                                                             
         fastqc/         -- Fastqc results, zipped
                                                                              
         htseq/          -- HTSeq results 
@@ -78,9 +74,9 @@ Outline of steps & commands used in pipeline:
                                                                                                              
         wig/            -- wig files for visualization
                                                                                                                              
-        jobinfo/        -- condor submit template and dag files
-
         RPKM results are written to a file called: RPKM.results
+
+        All alignment files (.sam & .bam) are removed to save disk space.
 
 *******************************************************************************
 RPKM.py
