@@ -6,9 +6,8 @@
           
 @Input:  Reference genome to use, options are R64, R64-2, PAN, Y22            
                      
-@Output: The following directories are created fastq, alignment, htseq, wig
-         and the associated files are moved into them, i.e. bam files go 
-         in the alignment directory. RPKM is calculated for all samples
+@Output: The following directories are created fastqc, htseq, wig, log
+         and associate files are moved there. RPKM is calculated for all samples
          output is in RPKM.results.
 
 @author: Mike Place
@@ -30,6 +29,7 @@ def cleanUp( cwd ):
     cwd = cwd + "/"
     # remove bam files
     [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith(".bam.gz") ]
+    [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith("sort.gz.bam") ]
     [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith(".bai") ] 
 
     # make wig directory
@@ -56,8 +56,8 @@ def cleanUp( cwd ):
     if not os.path.exists( cwd + 'log'):
         os.mkdir( "log" )
     logDir = cwd + "/log/"
-    [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".log") ]
-    [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(".err") ] 
+    [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("submit.log") ]
+    [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("submit.err") ] 
 
     # make a directory for fastqc results
     if not os.path.exists( cwd + 'fastqc'):
@@ -65,13 +65,6 @@ def cleanUp( cwd ):
     fastqcDir = cwd + "/fastqc/"
     [ os.rename( (cwd + fn), (fastqcDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("trim_fastqc.zip") ]
     [ os.rename( (cwd + fn), (fastqcDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("trim_fastqc") ]
-
-    # make a directory for the condor job files
-    #if not os.path.exists( cwd + 'jobinfo'):
-    #    os.mkdir( "jobinfo" )
-    #jobDir = cwd + "/jobinfo/"
-    #extension = [ ".jtf" ]
-    #[ os.rename( (cwd + fn), (jobDir + fn) ) for fn in os.listdir(cwd) if fn.endswith(tuple(extension)) ]
     
     # delete sam files as they are no longer needed
     [ os.unlink(fn) for fn in os.listdir(cwd) if fn.endswith('.sam.gz')]
@@ -137,7 +130,7 @@ def main():
     currDir = os.getcwd()
     runRPKM(currDir, reference)
     for file in os.listdir():
-        if file.endswith('final.sort.bam'):
+        if file.endswith('final.sort.gz.bam'):
             bam2wig(file)
 
     cleanUp(currDir)
