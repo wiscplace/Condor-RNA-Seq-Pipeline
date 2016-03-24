@@ -594,8 +594,6 @@ def main():
     else:
         reference = 'R64'
 
-    print("Using reference %s" %( reference))
-
     # Get aligner to use
     if cmdResults['ALIGNER'] is not None:
         if cmdResults['ALIGNER'] == 'bwamem':
@@ -788,7 +786,7 @@ def main():
     mydag.save('MasterDagman.dsf')
 
     # Submit job to condor
-    subprocess.Popen(['condor_submit_dag','MasterDagman.dsf'])
+    subprocess.Popen(['condor_submit_dag','-dont_suppress_notification', 'MasterDagman.dsf'])
     
 if __name__ == "__main__":
     main()
