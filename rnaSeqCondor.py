@@ -191,9 +191,11 @@ import argparse
 import os
 import reference as r
 import re
+import shutil
 import socket
 import subprocess
 import sys
+import time
 from pydagman.dagfile import Dagfile
 from pydagman.job import Job
 
@@ -500,7 +502,8 @@ def main():
                                          usage='%(prog)s -f <fastq file list.txt> [optional args: -a -r -d -ref ]', prog='rnaSeqCondor.py')
     cmdparser.add_argument('-a', '--aligner', action='store',      dest='ALIGNER', help='Default aligner is Bowtie2, to use Bwa mem: -a bwamem')
     cmdparser.add_argument('-d', '--detail',  action='store_true', dest='DETAIL',  help='Print a more detailed description of program.')
-    cmdparser.add_argument('-i', '--wfid',      action='store',    dest='WFID',    help='WorkFlow ID is required.')
+    cmdparser.add_argument('-f', '--file',    action='store',      dest='FILE',    help='Input file, listing fastq.gz files w/ full path to process.')
+    cmdparser.add_argument('-i', '--wfid',    action='store',      dest='WFID',    help='WorkFlow ID is required.')
     cmdparser.add_argument('-r', '--reverse', action='store_true', dest='REVERSE', help='HTSeq -s reverse, for Biotech GEC data, optional.')
     cmdparser.add_argument('-ref', '--reference', action='store',  dest='REFERENCE', help='Reference R64 (SGD R64-1-1), R64-2 (SGD R64-2-1), Y22-3 (GLBRC), PAN (PanGenome)' )
     cmdResults = vars(cmdparser.parse_args())
@@ -526,7 +529,7 @@ def main():
         print("\tCreate your directory and copy or link your fastq files into that directory.\n")
         print("To run default enter:  /home/GLBRCORG/mplace/scripts/rnaSeqCondor.py -i 53 \n")
         print("Optional Parameters:") 
-        print("\t-a  bwamem changes aligner from default bowtie2 to bwa mem\n")
+        print("\t-a  bwamem changes aligner from default bowtie2 to bwamem\n")
         print("\t-i  GLOW WorkFlow ID number (required).\n")
         print("\t-r  this will use \"-s reverse\" parameter for HTSeq.\n")
         print("\t-ref  change default reference, usage:  -ref Y22-3")
@@ -611,19 +614,42 @@ def main():
     else:
         aligner ='bowtie2'
 
+    # make new working directory in /home/GLBRC/username
+    cwd    = os.getcwd()
+    date   = time.strftime("%d-%m-%Y")
+    newDir = cwd + "/RNA-Seq_" + date
+    os.mkdir(newDir)
+
     # Get input file listing fastq files to process
-    for f in os.listdir(cwd):
-        if re.search(r'.fastq',f):
-            fastq.append(f)
-        
-    cwd = os.getcwd()
+    if cmdResults['FILE'] is not None:
+        fastqFiles = cmdResults['FILE']
+        with open(fastqFiles, 'r') as data:
+            for fstq in data:
+                fstq = fstq.rstrip()
+                fastq.append(fstq)      
+    else:
+        print("")
+        print(" Fastq input file is required")
+        cmdparser.print_help()
+        sys.exit(1)
+    
+    os.chdir(newDir)
+    for file in fastq:
+        name = file.split('/')
+        newFileName = os.getcwd() + '/' + name[-1]
+        os.symlink(file, newFileName )
+        #shutil.copy2(cwd + '/' + file, newDir + '/' + file, follow_symlinks=True )
+
+    os.mkdir('tmp')    
     
     #create Dagfile object
     mydag = Dagfile()
     numJobs = len(fastq)
 
     num = 1
-    for f in fastq:
+    for fstq in fastq:
+        name = fstq.split('/')
+        f = name[-1]
         
         trimJob = Job('trimCondor.jtf', 'job' + str(num))       # set trimmomatic job 
         mydag.add_job(trimJob)
@@ -771,9 +797,8 @@ def main():
     
     mydag.save('MasterDagman.dsf')
 
-    os.mkdir( cwd + '/tmp')
     # Submit job to condor
-    subprocess.Popen(['condor_submit_dag','MasterDagman.dsf'])
+    #subprocess.Popen(['condor_submit_dag','MasterDagman.dsf'])
     
 if __name__ == "__main__":
     main()
