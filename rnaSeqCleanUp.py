@@ -18,6 +18,7 @@ import re
 import subprocess
 import sys
 import reference as r
+import sendEmail as mail
 
 def cleanUp( cwd ):
     """
@@ -134,6 +135,7 @@ def main():
             bam2wig(file)
 
     cleanUp(currDir)
+    mail.send("RNA-Seq processing complete")
 
 if __name__ == "__main__":
     main()
