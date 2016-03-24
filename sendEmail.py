@@ -19,15 +19,17 @@ import os
 import smtplib
 import sys
 
+def send( message ):
+    smtpObj = smtplib.SMTP('smtp.wiscmail.wisc.edu',25)
+    text = 'Subject: Condor Job status\n\n' + message
+    smtpObj.sendmail('mplace@wisc.edu', 'mplace@wisc.edu', text )
+    smtpObj.quit()    
+
 def main():
     """
     Main 
     """
-    message = sys.argv[1]  # text
-    smtpObj = smtplib.SMTP('smtp.wiscmail.wisc.edu',25)
-    text = 'Subject: Condor Job status\n\n' + message
-    smtpObj.sendmail('mplace@wisc.edu', 'mplace@wisc.edu', text )
-    smtpObj.quit()
+    message = "RNA-Seq processing complete, have a jolly day" # text
 
 
 if __name__ == "__main__":
