@@ -8,14 +8,15 @@ Purpose: Implement the currently used Gasch lab RNA-Seq pipeline using condor
 
          HTCondor https://research.cs.wisc.edu/htcondor/
 
-Input:  reference, single
-
-        Reference Genomes available:
-        
-        R64-1-1 -- default equivalent to UCSC sacCer3
-        Most recent SGD S.cerevisiae genome reference
-        S.cerevisiae PanGenome reference 
-        GLBRC strain Y22-3 S.cerevisiae reference
+Input:  full paths to fastq.gz files to process one per line (text file)
+        -a aligner to use (bwamem or bowtie2)
+        -r flag will use -s reverse parameter for HTSeq
+        -ref  change default reference, usage:  -ref Y22-3
+            Current Reference List:
+            R64-1-1 -- default equivalent to UCSC sacCer3
+            R64-2-1 -- Most recent SGD S.cerevisiae genome reference
+            PAN     -- S.cerevisiae PanGenome reference
+            Y22-3   -- GLBRC strain Y22-3 S.cerevisiae reference
    
 Output: Each step has its own condor job template file (.jtf)
         Only htseq, fastqc, RPKM.results, log & error files are retained.
@@ -787,7 +788,7 @@ def main():
     mydag.save('MasterDagman.dsf')
 
     # Submit job to condor
-    #subprocess.Popen(['condor_submit_dag','MasterDagman.dsf'])
+    subprocess.Popen(['condor_submit_dag','MasterDagman.dsf'])
     
 if __name__ == "__main__":
     main()
