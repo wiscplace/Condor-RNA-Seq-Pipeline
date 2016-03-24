@@ -15,6 +15,7 @@
 """
 import os
 import re
+import shutil
 import subprocess
 import sys
 import reference as r
@@ -69,6 +70,10 @@ def cleanUp( cwd ):
     
     # delete sam files as they are no longer needed
     [ os.unlink(fn) for fn in os.listdir(cwd) if fn.endswith('.sam.gz')]
+
+    # copy RPKM.results file to bigdata
+    os.mkdir('/mnt/bigdata/processed_data/mplace/RNA-Seq')
+    shutil.copy('RPKM.results', '/mnt/bigdata/processed_data/mplace/RNA-Seq')
 
 def bam2wig( bamFile ):
     """
