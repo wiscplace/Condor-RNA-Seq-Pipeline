@@ -3,10 +3,18 @@ rnaSeqCondor.py
 Purpose:
 
     HTCondor implementation of the Gasch lab RNA-Seq pipeline.
+    Pipeline can be run 2 ways, from the command line or from
+    the GLOW website.
 
-    All fastq files in the working directory will be processed.
+    Fastq files should be gzipped and listed in put files with full path.
 
     Job implemented as a dagman using Branden Timm's Python Pydagman modules.
+
+
+To get a detailed description run: 
+
+    ./rnaSeqCondor.py -d
+
 
 Outline of steps & commands used in pipeline:
 
@@ -77,6 +85,25 @@ Outline of steps & commands used in pipeline:
         RPKM results are written to a file called: RPKM.results
 
         All alignment files (.sam & .bam) are removed to save disk space.
+
+
+Parameters:
+
+    -a  default aligner bowtie2, to use bwa : -a  bwamem
+
+    -f  input file listing full path to fastq.gz files one per line
+
+    -i  GLOW WorkFlow ID number (required).
+
+    -r  this will use "-s reverse" parameter for HTSeq.
+
+    -ref  change default reference, usage:  -ref Y22-3
+    
+        Current Reference List:
+        R64-1-1 -- default equivalent to UCSC sacCer3
+        R64-2-1 -- Most recent SGD S.cerevisiae genome reference
+        PAN     -- S.cerevisiae PanGenome reference 
+        Y22-3   -- GLBRC strain Y22-3 S.cerevisiae reference
 
 *******************************************************************************
 RPKM.py
