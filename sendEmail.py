@@ -25,11 +25,11 @@ def send( message ):
     smtpObj.sendmail('mplace@wisc.edu', 'mplace@wisc.edu', text )
     smtpObj.quit()    
 
-def main():
-    """
-    Main 
-    """
-    message = "RNA-Seq processing complete, have a jolly day" # text
+#def main():
+#    """
+#    Main 
+#    """
+#    message = "RNA-Seq processing complete, have a jolly day" # text
 
 
 if __name__ == "__main__":
