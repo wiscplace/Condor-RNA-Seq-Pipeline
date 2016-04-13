@@ -490,12 +490,13 @@ def main():
     """
     cmdparser = argparse.ArgumentParser( description="RNA-Seq Pipeline, condor version",
                                          usage='%(prog)s -f <fastq file list.txt> [optional args: -a -r -d -ref ]', prog='rnaSeqCondor.py')
-    cmdparser.add_argument('-a', '--aligner', action='store',      dest='ALIGNER', help='default is bowtie2, to use bwamem: -a bwamem')
+    cmdparser.add_argument('-a', '--aligner', action='store',      dest='ALIGNER', help='default is bowtie2, to use bwamem: -a bwamem', metavar='')
     cmdparser.add_argument('-d', '--detail',  action='store_true', dest='DETAIL',  help='Print a more detailed description of program.')
-    cmdparser.add_argument('-f', '--file',    action='store',      dest='FILE',    help='Input file, listing fastq.gz files w/ full path to process.')
-    cmdparser.add_argument('-i', '--wfid',    action='store',      dest='WFID',    help='WorkFlow ID is required.')
+    cmdparser.add_argument('-f', '--file',    action='store',      dest='FILE',    help='Input file, listing fastq.gz files w/ full path to process.',metavar='')
+    cmdparser.add_argument('-i', '--wfid',    action='store',      dest='WFID',    help='WorkFlow ID is required.', metavar='')
     cmdparser.add_argument('-r', '--reverse', action='store_true', dest='REVERSE', help='HTSeq -s reverse, for Biotech GEC data, optional.')
-    cmdparser.add_argument('-ref', '--reference', action='store',  dest='REFERENCE', help='Reference R64 (SGD R64-1-1), R64-2 (SGD R64-2-1), Y22-3 (GLBRC), PAN (PanGenome)' )
+    cmdparser.add_argument('-ref', '--reference', action='store',  dest='REFERENCE', help='Reference R64 (SGD R64-1-1), R64-2 (SGD R64-2-1), Y22-3 (GLBRC), PAN (PanGenome)', metavar='')
+    cmdparser.add_argument('-t', '--token', action='store',        dest='TOKEN',   help='Authentication token', metavar='' )
     cmdResults = vars(cmdparser.parse_args())
 
     fastq = []              # List of fastq files to process
@@ -524,6 +525,7 @@ def main():
         print("\t-i  GLOW WorkFlow ID number (required).\n")
         print("\t-r  this will use \"-s reverse\" parameter for HTSeq.\n")
         print("\t-ref  change default reference, usage:  -ref Y22-3")
+        print("\t-t  authentication token")
         print("\t    Current Reference List:")
         print("\t\tR64-1-1 -- default equivalent to UCSC sacCer3" )
         print("\t\tR64-2-1 -- Most recent SGD S.cerevisiae genome reference" )
@@ -571,9 +573,12 @@ def main():
         print("\tssh to scarcity-cm.glbrc.org")
         sys.exit(1)
         
-    # check for GLOW workflow ID number
+    # Get GLOW workflow ID number
     if cmdResults['WFID']:
-        workflowID = cmdResults['WFID']
+        ID = cmdResults['WFID']
+        wfList     = ID.split('=')
+        wfList[1]  = re.sub('<','',wfList[1])
+        workflowID = re.sub('>','',wfList[1])
     else:
         print("")
         print(" WorkFlow ID is required")
@@ -602,6 +607,17 @@ def main():
             aligner='bowtie2'
     else:
         aligner ='bowtie2'
+        
+    # Get authentication token for use w/ GLOW
+    if cmdResults['TOKEN'] is not None:
+        tkn        = cmdResults['TOKEN']
+        tknList    = tkn.split('=')
+        tknList[1] = re.sub('<','',tknList[1])
+        token      = re.sub('>','',tknList[1])
+    else:
+        print("\n Authentication token argument is required\n")
+        cmdparser.print_help()
+        sys.exit(1)
 
     # make new working directory in /home/GLBRC/username
     cwd    = os.getcwd()
