@@ -637,7 +637,8 @@ def main():
     # make new working directory in /home/GLBRC/username,
     # time.strtime used to get a unique directory name,
     # stamp is day month year - minute second
-    cwd    = os.getcwd()
+    #cwd    = os.getcwd()
+    cwd  = '/home/GLBRCORG/mplace/projects/condor/Condor-RNA-Seq-Pipeline'
     date   = time.strftime("%d%m%Y-%M%S")
     newDir = cwd + "/RNA-Seq_" + date
     os.mkdir(newDir)    
@@ -818,7 +819,7 @@ def main():
     mydag.save('MasterDagman.dsf')
 
     # Submit job to condor
-    # subprocess.Popen(['condor_submit_dag', 'MasterDagman.dsf'])
+    subprocess.Popen(['condor_submit_dag', 'MasterDagman.dsf'])
     
 if __name__ == "__main__":
     main()
