@@ -190,8 +190,9 @@ pydagman located: /home/GLBRCORG/mplace/anaconda3/lib/python3.4/site-packages/py
 """
 import argparse
 import os
-import reference as r
 import re
+import reference as r
+import requests
 import shutil
 import socket
 import subprocess
@@ -484,6 +485,29 @@ def finalFile():
         submit.write( "Queue" )
     submit.close()
 
+def getFileList(wfID, token):
+    """
+    Use glow api to get a list of workflow ID's
+    From Darin:
+
+    I just implemented a new API method to fetch file names.
+    Its url is https://glow-trunk.glbrc.org/get_workflow_file_list,
+    and you send it the workflow_id you want, as well as the glow_access_token.
+    It returns a line-break delimited list of paths to the files attached to the workflow.
+
+    """
+    # Get the fastq file paths
+    cmd = [ 'curl', '--data', 'workflow_id=' + wfID + '&glow_access_token=' + token,
+            'https://glow-trunk.glbrc.org/get_workflow_file_list ' ]           
+    output = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    result1 = output[0].decode('utf-8')
+    fileList = result1.split('\n')
+    filePaths = []
+    for f in fileList:
+        if f.endswith('.fastq.gz'):
+            filePaths.append(f)            
+    return filePaths            
+
 def main():
     """
     main() 
@@ -492,7 +516,7 @@ def main():
                                          usage='%(prog)s -f <fastq file list.txt> [optional args: -a -r -d -ref ]', prog='rnaSeqCondor.py')
     cmdparser.add_argument('-a', '--aligner', action='store',      dest='ALIGNER', help='default is bowtie2, to use bwamem: -a bwamem', metavar='')
     cmdparser.add_argument('-d', '--detail',  action='store_true', dest='DETAIL',  help='Print a more detailed description of program.')
-    cmdparser.add_argument('-f', '--file',    action='store',      dest='FILE',    help='Input file, listing fastq.gz files w/ full path to process.',metavar='')
+    cmdparser.add_argument('-f', '--file',    action='store',      dest='FILE',    help='Input file paths as string, listing fastq.gz files w/ full path to process.',metavar='')
     cmdparser.add_argument('-i', '--wfid',    action='store',      dest='WFID',    help='WorkFlow ID is required.', metavar='')
     cmdparser.add_argument('-r', '--reverse', action='store_true', dest='REVERSE', help='HTSeq -s reverse, for Biotech GEC data, optional.')
     cmdparser.add_argument('-ref', '--reference', action='store',  dest='REFERENCE', help='Reference R64 (SGD R64-1-1), R64-2 (SGD R64-2-1), Y22-3 (GLBRC), PAN (PanGenome)', metavar='')
@@ -579,11 +603,6 @@ def main():
         wfList     = ID.split('=')
         wfList[1]  = re.sub('<','',wfList[1])
         workflowID = re.sub('>','',wfList[1])
-    else:
-        print("")
-        print(" WorkFlow ID is required")
-        cmdparser.print_help()
-        sys.exit(1)        
 
     # Get reference genome to use
     if cmdResults['REFERENCE'] is not None:
@@ -614,30 +633,27 @@ def main():
         tknList    = tkn.split('=')
         tknList[1] = re.sub('<','',tknList[1])
         token      = re.sub('>','',tknList[1])
-    else:
-        print("\n Authentication token argument is required\n")
-        cmdparser.print_help()
-        sys.exit(1)
 
-    # make new working directory in /home/GLBRC/username
+    # make new working directory in /home/GLBRC/username,
+    # time.strtime used to get a unique directory name,
+    # stamp is day month year - minute second
     cwd    = os.getcwd()
-    date   = time.strftime("%d-%m-%Y")
+    date   = time.strftime("%d%m%Y-%M%S")
     newDir = cwd + "/RNA-Seq_" + date
-    os.mkdir(newDir)
-
-    # Get input file listing fastq files to process
-    if cmdResults['FILE'] is not None:
-        fastqFiles = cmdResults['FILE']
-        with open(fastqFiles, 'r') as data:
-            for fstq in data:
-                fstq = fstq.rstrip()
-                fastq.append(fstq)      
-    else:
-        print("")
-        print(" Fastq input file is required")
-        cmdparser.print_help()
-        sys.exit(1)
+    os.mkdir(newDir)    
     
+    if cmdResults['FILE'] is None:
+    # assume we are running w/ GLOW and get input file listing fastq files to process
+        fastq = getFileList(workflowID, token)
+    else:
+    # assume we are running on the command line
+        if cmdResults['FILE'] is not None:
+            fastqFiles = cmdResults['FILE']
+            with open(fastqFiles, 'r') as data:
+                for fstq in data:
+                    fstq = fstq.rstrip()
+                    fastq.append(fstq)
+   
     os.chdir(newDir)
     for file in fastq:
         name = file.split('/')
@@ -802,7 +818,7 @@ def main():
     mydag.save('MasterDagman.dsf')
 
     # Submit job to condor
-    subprocess.Popen(['condor_submit_dag', 'MasterDagman.dsf'])
+    # subprocess.Popen(['condor_submit_dag', 'MasterDagman.dsf'])
     
 if __name__ == "__main__":
     main()
