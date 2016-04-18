@@ -14,6 +14,12 @@ SMTP Port: 25
 
 @author: Mike Place
 @Date:   3/18/2016
+
+TODO:
+get submitter name for email address
+( right now all job completion messages go to mike)
+
+
 """
 import os
 import smtplib
