@@ -12,6 +12,11 @@
 
 @author: Mike Place
 @Date:   3/1/2016
+
+TODO:
+get submitter name
+use submitter name to create dir on bigdata/processed_data
+
 """
 import os
 import re
