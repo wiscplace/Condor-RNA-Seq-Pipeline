@@ -463,7 +463,7 @@ def htSeqFile( strandedness ):
         submit.write( "Queue" )
     submit.close()
     
-def finalFile():
+def finalFile( submitter, rnaFile ):
     """
     Create the job submit file for the FINAL DAGman node.
     This runs bam to wig, RPKM then cleans up the directory
@@ -473,7 +473,7 @@ def finalFile():
         submit.write( "Universe                 = local\n" )
         submit.write( "Executable               = /home/GLBRCORG/mplace/projects/condor/Condor-RNA-Seq-Pipeline/rnaSeqCleanUp.py\n" )
         submit.write( "getenv                   = True\n")
-        submit.write( "Arguments                = $(reference)\n" )
+        submit.write( "Arguments                = $(reference) " + submitter + " " + rnaFile + "\n" )
         submit.write( "getenv                   = True\n")        
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
@@ -486,7 +486,7 @@ def finalFile():
         submit.write( "Queue" )
     submit.close()
 
-def getFileList(wfID, token):
+def getFileList( wfID, token ):
     """
     Use glow api to get a list of workflow ID's
     From Darin:
@@ -509,12 +509,11 @@ def getFileList(wfID, token):
             filePaths.append(f)            
     return filePaths
 
-def getSubmitter(wfID, token):
+def getSubmitter( wfID, token ):
     """
     Use curl to get submitter name from workflow xml page.
     """
     cmd = [ 'curl', 'https://glow-trunk.glbrc.org/workflows/' + wfID + '.xml?glow_access_token=' + token ]
-    print(cmd)
     output = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
     result1 = output[0].decode('utf-8')
     # parse the xml
@@ -647,21 +646,11 @@ def main():
         tknList    = tkn.split('=')
         tknList[1] = re.sub('<','',tknList[1])
         token      = re.sub('>','',tknList[1])
-
-    # make new working directory in /home/GLBRC/username,
-    # time.strtime used to get a unique directory name,
-    # stamp is day month year - minute second
-    #cwd    = os.getcwd()
-    cwd  = '/home/GLBRCORG/mplace/projects/condor/Condor-RNA-Seq-Pipeline'
-    date   = time.strftime("%d%m%Y-%M%S")
-    newDir = cwd + "/RNA-Seq_" + date
-    os.mkdir(newDir)    
     
     if cmdResults['FILE'] is None:
     # assume we are running w/ GLOW and get input file listing fastq files to process
         fastq     = getFileList(workflowID, token)
         submitter = getSubmitter(workflowID, token)
-        print("submitter %s" %(submitter))
     else:
     # assume we are running on the command line
         if cmdResults['FILE'] is not None:
@@ -670,6 +659,16 @@ def main():
                 for fstq in data:
                     fstq = fstq.rstrip()
                     fastq.append(fstq)
+    # make new working directory in /home/GLBRC/username/RNA_Seq_date-randomNumber
+    # time.strtime used to get a unique directory name,
+    # stamp is day month year - minute second
+    #cwd    = os.getcwd()
+    cwd  = '/home/GLBRCORG/' + submitter 
+    date   = time.strftime("%d%m%Y-%M%S")
+    rnaFile = "RNA_Seq_" + date
+    newDir = cwd + '/' + rnaFile
+    print(newDir)
+    os.mkdir(newDir)    
    
     os.chdir(newDir)
     for file in fastq:
@@ -831,7 +830,7 @@ def main():
     htSeqFile(strandedness)
     # write FINAL node submit file
     # This will run RPKM and clean up the directory 
-    finalFile()
+    finalFile(submitter, rnaFile)
     
     mydag.save('MasterDagman.dsf')
 
