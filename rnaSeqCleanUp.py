@@ -26,7 +26,7 @@ import sys
 import reference as r
 import sendEmail as mail
 
-def cleanUp( cwd ):
+def cleanUp( cwd, submitter, rnaDir  ):
     """
     Delete unneeded files and move output files to appropriate directory
     os.mkdir()
@@ -77,8 +77,8 @@ def cleanUp( cwd ):
     [ os.unlink(fn) for fn in os.listdir(cwd) if fn.endswith('.sam.gz')]
 
     # copy RPKM.results file to bigdata
-    os.mkdir('/mnt/bigdata/processed_data/mplace/RNA-Seq')
-    shutil.copy('RPKM.results', '/mnt/bigdata/processed_data/mplace/RNA-Seq')
+    os.mkdir('/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir)
+    shutil.copy('RPKM.results', '/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir)
 
 def bam2wig( bamFile ):
     """
@@ -137,14 +137,16 @@ def main():
     """
     Main 
     """
-    reference = sys.argv[1]  # reference genome to use 
-    currDir = os.getcwd()
+    reference = sys.argv[1]  # reference genome to use
+    submitter = sys.argv[2]  # users name
+    rnaDir    = sys.argv[3]  # rna processing directory name
+    currDir   = os.getcwd()
     runRPKM(currDir, reference)
     for file in os.listdir():
         if file.endswith('final.sort.gz.bam'):
             bam2wig(file)
 
-    cleanUp(currDir)
+    cleanUp(currDir, submitter, rnaDir )
     mail.send("RNA-Seq processing complete")
 
 if __name__ == "__main__":
