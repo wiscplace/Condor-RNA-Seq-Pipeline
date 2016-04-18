@@ -667,6 +667,7 @@ def main():
     mydag = Dagfile()
     numJobs = len(fastq)
 
+    # Now set up each input file to run through the pipeline as a DAGman job
     num = 1
     for fstq in fastq:
         name = fstq.split('/')
