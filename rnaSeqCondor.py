@@ -189,6 +189,7 @@ Date:   1/05/2016
 pydagman located: /home/GLBRCORG/mplace/anaconda3/lib/python3.4/site-packages/pydagman
 """
 import argparse
+from bs4 import BeautifulSoup as BS
 import os
 import re
 import reference as r
@@ -506,7 +507,20 @@ def getFileList(wfID, token):
     for f in fileList:
         if f.endswith('.fastq.gz'):
             filePaths.append(f)            
-    return filePaths            
+    return filePaths
+
+def getSubmitter(wfID, token):
+    """
+    Use curl to get submitter name from workflow xml page.
+    """
+    cmd = [ 'curl', 'https://glow-trunk.glbrc.org/workflows/' + wfID + '.xml?glow_access_token=' + token ]
+    print(cmd)
+    output = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    result1 = output[0].decode('utf-8')
+    # parse the xml
+    xmlsoup = BS(result1, 'lxml-xml')
+    submitter = xmlsoup.find('submitter').get_text()
+    return submitter
 
 def main():
     """
@@ -645,7 +659,9 @@ def main():
     
     if cmdResults['FILE'] is None:
     # assume we are running w/ GLOW and get input file listing fastq files to process
-        fastq = getFileList(workflowID, token)
+        fastq     = getFileList(workflowID, token)
+        submitter = getSubmitter(workflowID, token)
+        print("submitter %s" %(submitter))
     else:
     # assume we are running on the command line
         if cmdResults['FILE'] is not None:
