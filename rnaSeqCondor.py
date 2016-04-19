@@ -616,6 +616,7 @@ def main():
         wfList     = ID.split('=')
         wfList[1]  = re.sub('<','',wfList[1])
         workflowID = re.sub('>','',wfList[1])
+        
 
     # Get reference genome to use
     if cmdResults['REFERENCE'] is not None:
@@ -667,7 +668,6 @@ def main():
     date   = time.strftime("%d%m%Y-%M%S")
     rnaFile = "RNA_Seq_" + date
     newDir = cwd + '/' + rnaFile
-    print(newDir)
     os.mkdir(newDir)    
    
     os.chdir(newDir)
@@ -834,6 +834,24 @@ def main():
     
     mydag.save('MasterDagman.dsf')
 
+    # write log file
+    with open('pipeline.log', 'w') as log:
+        log.write('Hostname  : %s\n' %(hostname))
+        log.write('workflowID: %s\n' %(workflowID))
+        log.write('Reference : %s\n' %(reference))
+        log.write('Aligner   : %s\n' %(aligner))
+        log.write('Token     : %s\n' %(token))
+        log.write('Submitter : %s\n' %(submitter))
+        log.write('Directory : %s\n' %(newDir))
+        if strandedness:
+            log.write('Reverse   : TRUE\n')
+        else:
+            log.write('Reverse   : FALSE\n')          
+        log.write('Fastq list: \n')
+        for f in fastq:
+            log.write('%s\n' %(f))
+    log.close()
+    
     # Submit job to condor
     subprocess.Popen(['condor_submit_dag', 'MasterDagman.dsf'])
     
