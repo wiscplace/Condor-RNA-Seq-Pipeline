@@ -18,24 +18,28 @@ To get a detailed description run:
 
 Outline of steps & commands used in pipeline:
 
-  1) Trimmomatic 
+  1) Trimmomatic version 0.3 
 
           /opt/bifxapps/Trimmomatic-0.30/trimmomatic-0.30.jar SE -phred33 input_fastq 
           outFile LEADING:3 TRAILING:3 SLIDINGWINDOW:3:30 MINLEN:36
 
-  2) Fastqc 
+  2) Fastqc version 0.10.1
 
           /opt/bifxapps/FastQC/fastqc trimmed_fastq
 
   3) Alignment 
 
+          Bowtie2 version 2.2.2
+
           Bowtie2 -p 8 --phred33 -N 1 -x  referenceFile -U  trimmed_fastq -S outFile
                                               
           or
 
+          bwa version 0.7.12-r1039
+
           bwa mem -t 8 -M referenceFile trimmed_fastq
 
-  4) Picard-tools 
+  4) Picard-tools version 1.98(1547)
 
           /opt/bifxapps/picard-tools/CleanSam.jar I= samFile O=outFile
 
@@ -45,7 +49,7 @@ Outline of steps & commands used in pipeline:
 
           PL=ILLUMINA PU=unk RGSM=SampleName
 
-  5) samtools 
+  5) samtools version 1.2 (using htslib 1.2.1)
 
           sam to bam: samtools view -bS -t reference.fsa.fai -o bam samFile
 
@@ -53,13 +57,13 @@ Outline of steps & commands used in pipeline:
 
           index bam: samtools index sorted_Bam
 
-  6) HTSeq 
+  6) HTSeq version 0.6.0
 
          /opt/bifxapps/python/bin/htseq-count -t CDS -i Parent inputFile Ref_gff
 
          -- if '-r' specfied -s reverse will be used as well
 
-  7) RPKM 
+  7) RPKM version 1.0
 
          /home/GLBRCORG/mplace/scripts/RPKM.py
                                                                                                                                                       
@@ -67,7 +71,7 @@ Outline of steps & commands used in pipeline:
 
          Run RPKM on all HTSeq files in Current Directory.
 
-  8) bam2wig.pl 
+  8) bam2wig.pl version 1.12.5
 
          /opt/bifxapps/biotoolbox/scripts/bam2wig.pl --in bamFile --pos mid --strand --rpm --out outFile
 
