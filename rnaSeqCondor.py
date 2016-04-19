@@ -463,7 +463,7 @@ def htSeqFile( strandedness ):
         submit.write( "Queue" )
     submit.close()
     
-def finalFile( submitter, rnaFile ):
+def finalFile( submitter, rnaFile, wfID , token ):
     """
     Create the job submit file for the FINAL DAGman node.
     This runs bam to wig, RPKM then cleans up the directory
@@ -473,7 +473,7 @@ def finalFile( submitter, rnaFile ):
         submit.write( "Universe                 = local\n" )
         submit.write( "Executable               = /home/GLBRCORG/mplace/projects/condor/Condor-RNA-Seq-Pipeline/rnaSeqCleanUp.py\n" )
         submit.write( "getenv                   = True\n")
-        submit.write( "Arguments                = $(reference) " + submitter + " " + rnaFile + "\n" )
+        submit.write( "Arguments                = $(reference) " + submitter + " " + rnaFile + " " + wfID + " " + token + "\n" )
         submit.write( "getenv                   = True\n")        
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
@@ -829,8 +829,9 @@ def main():
         strandedness = 0
     htSeqFile(strandedness)
     # write FINAL node submit file
-    # This will run RPKM and clean up the directory 
-    finalFile(submitter, rnaFile)
+    # This will run RPKM and clean up the directory
+    # and write results to GLOW
+    finalFile(submitter, rnaFile, workflowID, token)
     
     mydag.save('MasterDagman.dsf')
 
