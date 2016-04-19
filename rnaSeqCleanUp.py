@@ -64,7 +64,8 @@ def cleanUp( cwd, submitter, rnaDir  ):
         os.mkdir( "log" )
     logDir = cwd + "/log/"
     [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("submit.log") ]
-    [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("submit.err") ] 
+    [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("submit.err") ]
+    os.rename( 'pipeline.log', logDir + 'pipeline.log')
 
     # make a directory for fastqc results
     if not os.path.exists( cwd + 'fastqc'):
@@ -79,6 +80,32 @@ def cleanUp( cwd, submitter, rnaDir  ):
     # copy RPKM.results file to bigdata
     os.mkdir('/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir)
     shutil.copy('RPKM.results', '/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir)
+
+def updateGLOW( submitter, rnaDir, wfID, token )
+    """
+    Update the submitter's workflow on GLOW with the results of the pipeline.
+    Currently only RPKM.results is copied over to GLOW.
+    example
+    cmd = ['curl', '--cookie',  'cjar', '--data', 'workflow_xml=<workflow workflow_id="59"><datafile><name>RPKM.results</name>\
+    <file_path>/mnt/bigdata/processed_data/mplace/RPKM.results</file_path><file_type>Gene-centric Counts</file_type><sub_type>RPKM</sub_type></datafile></workflow>',
+           'https://glow-trunk.glbrc.org/upsert_workflow?glow_access_token=c1f3b8d2b8ab8126ad0df366f99a5570d2216b0b' ]
+    output = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    result1 = output[0].decode('utf-8')
+    result2 = output[1].decode('utf-8')    
+    print(result1)
+    print(result2)
+
+    """
+    cmd = ['curl', '--cookie',  'cjar', '--data', 'workflow_xml=<workflow workflow_id="' + wfID + '"><datafile><name>RPKM.results</name>\
+    <file_path>/mnt/bigdata/processed_data/' + submitter + '/' + rnaDIR + '/RPKM.results</file_path><file_type>Gene-centric Counts</file_type><sub_type>RPKM</sub_type></datafile></workflow>',
+           'https://glow-trunk.glbrc.org/upsert_workflow?glow_access_token=' + token ]
+    output = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    result1 = output[0].decode('utf-8')
+    result2 = output[1].decode('utf-8')    
+    with open('glow.log', 'w') as log:
+        log.write(result1)
+        log.write("\n")
+        log.write(result2)
 
 def bam2wig( bamFile ):
     """
@@ -137,16 +164,18 @@ def main():
     """
     Main 
     """
-    reference = sys.argv[1]  # reference genome to use
-    submitter = sys.argv[2]  # users name
-    rnaDir    = sys.argv[3]  # rna processing directory name
-    currDir   = os.getcwd()
+    reference  = sys.argv[1]  # reference genome to use
+    submitter  = sys.argv[2]  # users name
+    rnaDir     = sys.argv[3]  # rna processing directory name
+    workflowID = sys.argv[4]  # workflow ID, used to update GLOW
+    token      = sys.argv[5]  # GLOW access token
+    currDir    = os.getcwd()
     runRPKM(currDir, reference)
     for file in os.listdir():
         if file.endswith('final.sort.gz.bam'):
             bam2wig(file)
 
-    cleanUp(currDir, submitter, rnaDir )
+    cleanUp(currDir, submitter, rnaDir , workflowID, token)
     mail.send("RNA-Seq processing complete")
 
 if __name__ == "__main__":
