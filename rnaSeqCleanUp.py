@@ -26,12 +26,13 @@ import sys
 import reference as r
 import sendEmail as mail
 
-def cleanUp( cwd, submitter, rnaDir  ):
+def cleanUp( cwd, submitter, rnaDir, workflowID, token):
     """
-    Delete unneeded files and move output files to appropriate directory
-    os.mkdir()
-    os.rename( currentPath/, newPath )
-    os.remove()
+    Delete unneeded files and move output files to appropriate directory on big data
+    files types deleted: bam, fastq, sam
+    directories created for log, wig, htseq files, these files remain in users home directory
+    A copy of the RPKM.results file will be put in the users directory on big data.
+    GLOW will be updated with the results and job completion.
     """
     cwd = cwd + "/"
     # remove bam files
@@ -39,6 +40,9 @@ def cleanUp( cwd, submitter, rnaDir  ):
     [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith("sort.gz.bam") ]
     [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith(".bai") ] 
 
+    # remove fastq files
+    [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith("fastq.gz") ]
+    
     # make wig directory
     if not os.path.exists( cwd + 'wig'):
         os.mkdir( "wig" )
@@ -49,15 +53,7 @@ def cleanUp( cwd, submitter, rnaDir  ):
     if not os.path.exists( cwd + 'htseq'):
         os.mkdir( "htseq" )
     htsDir = cwd + "/htseq/"
-    [ os.rename( (cwd + fn), (htsDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("_HTseqOutput.txt.gz") ]
-
-    # write a list of fastq files used to log file
-    [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith(".trim.fastq.gz")]
-    with open('inputFileList.log', 'w') as out:
-        for fn in os.listdir(cwd):
-            if fn.endswith(".fastq"):
-                out.write(fn)
-                out.write("\n")
+    [ os.rename( (cwd + fn), (htsDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("_HTseqOutput.txt.gz") ]   
 
     # make log file directory
     if not os.path.exists( cwd + 'log'):
@@ -80,8 +76,12 @@ def cleanUp( cwd, submitter, rnaDir  ):
     # copy RPKM.results file to bigdata
     os.mkdir('/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir)
     shutil.copy('RPKM.results', '/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir)
+    with open('pipeline.log', 'a') as log:
+        log.write('\n RPKM.results file written to:\n')
+        log.write('/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir)
+    log.close()
 
-def updateGLOW( submitter, rnaDir, wfID, token )
+def updateGLOW( submitter, rnaDir, wfID, token ):
     """
     Update the submitter's workflow on GLOW with the results of the pipeline.
     Currently only RPKM.results is copied over to GLOW.
@@ -171,6 +171,7 @@ def main():
             bam2wig(file)
 
     cleanUp(currDir, submitter, rnaDir , workflowID, token)
+    updateGLOW( submitter, rnaDir, wfID, token )
     mail.send("RNA-Seq processing complete")
 
 if __name__ == "__main__":
