@@ -34,6 +34,14 @@ def cleanUp( cwd, submitter, rnaDir, workflowID, token):
     A copy of the RPKM.results file will be put in the users directory on big data.
     GLOW will be updated with the results and job completion.
     """
+    # copy RPKM.results file to bigdata
+    os.mkdir('/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir)
+    shutil.copy('RPKM.results', '/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir)
+    with open('pipeline.log', 'a') as log:
+        log.write('\n RPKM.results file written to:\n')
+        log.write('/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir)
+    log.close()
+    
     cwd = cwd + "/"
     # remove bam files
     [ os.unlink( fn ) for fn in os.listdir(cwd) if fn.endswith(".bam.gz") ]
@@ -62,6 +70,8 @@ def cleanUp( cwd, submitter, rnaDir, workflowID, token):
     [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("submit.log") ]
     [ os.rename( (cwd + fn), (logDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("submit.err") ]
     os.rename( (cwd +'pipeline.log'), (logDir + 'pipeline.log') )
+    os.rename( (cwd + 'bam2wig.log'), (logDir + 'bam2wig.log') )
+    os.rename( (cwd + 'glow.log'), (logDir + 'glow.log') )
 
     # make a directory for fastqc results
     if not os.path.exists( cwd + 'fastqc'):
@@ -72,14 +82,6 @@ def cleanUp( cwd, submitter, rnaDir, workflowID, token):
     
     # delete sam files as they are no longer needed
     [ os.unlink(fn) for fn in os.listdir(cwd) if fn.endswith('.sam.gz')]
-
-    # copy RPKM.results file to bigdata
-    os.mkdir('/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir)
-    shutil.copy('RPKM.results', '/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir)
-    with open('pipeline.log', 'a') as log:
-        log.write('\n RPKM.results file written to:\n')
-        log.write('/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir)
-    log.close()
 
 def updateGLOW( submitter, rnaDir, wfID, token ):
     """
@@ -98,6 +100,9 @@ def updateGLOW( submitter, rnaDir, wfID, token ):
     result1 = output[0].decode('utf-8')
     result2 = output[1].decode('utf-8')    
     with open('glow.log', 'w') as log:
+        log.write("GLOW command:")
+        log.write(cmd)
+        log.write("\n")
         log.write(result1)
         log.write("\n")
         log.write(result2)
@@ -169,9 +174,9 @@ def main():
     for file in os.listdir():
         if file.endswith('final.sort.gz.bam'):
             bam2wig(file)
-
-    cleanUp(currDir, submitter, rnaDir , workflowID, token)
+            
     updateGLOW( submitter, rnaDir, wfID, token )
+    cleanUp(currDir, submitter, rnaDir , workflowID, token)
     mail.send("RNA-Seq processing complete")
 
 if __name__ == "__main__":
