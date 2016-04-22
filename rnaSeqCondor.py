@@ -660,6 +660,13 @@ def main():
                 for fstq in data:
                     fstq = fstq.rstrip()
                     fastq.append(fstq)
+            submitter = os.environ.get('USER')
+        else:
+            print("")
+            print("\t-f input file is missing.")
+            cmdparser.print_help()
+            sys.exit(1)
+            
     # make new working directory in /home/GLBRC/username/RNA_Seq_date-randomNumber
     # time.strtime used to get a unique directory name,
     # stamp is day month year - minute second
@@ -671,11 +678,12 @@ def main():
     os.mkdir(newDir)    
    
     os.chdir(newDir)
+    # copy files to working directory
     for file in fastq:
         name = file.split('/')
         newFileName = os.getcwd() + '/' + name[-1]
-        os.symlink(file, newFileName )
-
+        shutil.copyfile(file, newFileName )
+        
     os.mkdir('tmp')    
     
     #create Dagfile object
