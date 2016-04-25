@@ -94,14 +94,14 @@ def updateGLOW( submitter, rnaDir, wfID, token ):
     output = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
     """
     cmd = ['curl', '--cookie',  'cjar', '--data', 'workflow_xml=<workflow workflow_id="' + wfID + '"><datafile><name>RPKM.results</name>\
-    <file_path>/mnt/bigdata/processed_data/' + submitter + '/' + rnaDIR + '/RPKM.results</file_path><file_type>Gene-centric Counts</file_type><sub_type>RPKM</sub_type></datafile></workflow>',
+    <file_path>/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir + '/RPKM.results</file_path><file_type>Gene-centric Counts</file_type><sub_type>RPKM</sub_type></datafile></workflow>',
            'https://glow-trunk.glbrc.org/upsert_workflow?glow_access_token=' + token ]
     output = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
     result1 = output[0].decode('utf-8')
     result2 = output[1].decode('utf-8')    
     with open('glow.log', 'w') as log:
         log.write("GLOW command:")
-        log.write(cmd)
+        log.write(' '.join(cmd))
         log.write("\n")
         log.write(result1)
         log.write("\n")
@@ -175,7 +175,7 @@ def main():
         if file.endswith('final.sort.gz.bam'):
             bam2wig(file)
             
-    updateGLOW( submitter, rnaDir, wfID, token )
+    updateGLOW( submitter, rnaDir, workflowID, token )
     cleanUp(currDir, submitter, rnaDir , workflowID, token)
     mail.send("RNA-Seq processing complete")
 
