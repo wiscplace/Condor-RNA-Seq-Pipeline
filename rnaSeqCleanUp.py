@@ -61,7 +61,12 @@ def cleanUp( cwd, submitter, rnaDir, workflowID, token):
     if not os.path.exists( cwd + 'htseq'):
         os.mkdir( "htseq" )
     htsDir = cwd + "/htseq/"
-    [ os.rename( (cwd + fn), (htsDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("_HTseqOutput.txt.gz") ]   
+    [ os.rename( (cwd + fn), (htsDir + fn) ) for fn in os.listdir(cwd) if fn.endswith("_HTseqOutput.txt.gz") ]
+    # run HTseqReport.py 
+    os.chdir(htsDir)
+    cmd = [ '/home/GLBRCORG/mplace/projects/condor/Condor-RNA-Seq-Pipeline/HTseqReport.py' ]
+    subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE ).communicate()
+    os.chdir(cwd)
 
     # make log file directory
     if not os.path.exists( cwd + 'log'):
