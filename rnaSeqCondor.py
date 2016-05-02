@@ -10,7 +10,7 @@ Purpose: Implement the currently used Gasch lab RNA-Seq pipeline using condor
 
 Input:  full paths to fastq.gz files to process one per line (text file)
         -a aligner to use (bwamem or bowtie2)
-        -r flag will use -s reverse parameter for HTSeq
+        -s strand parameter for HTSeq
         -ref  change default reference, usage:  -ref Y22-3
             Current Reference List:
             R64-1-1 -- default equivalent to UCSC sacCer3
@@ -152,7 +152,7 @@ HTSeq
 Given a file with aligned sequencing reads and a list of genomic features, 
 count how many reads map to each feature.
 
-htseq-count -t CDS -i Parent samFile  gff 
+htseq-count -t CDS -s <yes/no/reverse> -i Parent samFile  gff 
 
     OUTPUT: htseq text file
 
@@ -440,16 +440,13 @@ def indexBamFile():
 def htSeqFile( strandedness ):
     """
     Call HTSeq-count to get gene counts for each sample.
-    -s parameter indicates reverse strand library construction
+    -s indicates strandedness of library construction, required       
     """
     with open('htseq.jtf', 'w') as submit:
         submit.write( "Universe                 = vanilla\n" )
         submit.write( "Executable               = /opt/bifxapps/python/bin/htseq-count\n" )
         submit.write( "getenv                   = True\n")
-        if strandedness == 1:
-            submit.write( "Arguments                = -f bam -t CDS -i Parent -s reverse $(bam) $(gff)\n" )
-        else:
-            submit.write( "Arguments                = -f bam -t CDS -i Parent $(bam) $(gff)\n" )
+        submit.write( "Arguments                = -f bam -t CDS -i Parent -s " + strandedness + " $(bam) $(gff)\n" )
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
         submit.write( "When_To_Transfer_Output  = On_Exit\n" )
         submit.write( "Transfer_Input_Files     = $(bam)\n" )
@@ -531,7 +528,7 @@ def main():
     cmdparser.add_argument('-d', '--detail',  action='store_true', dest='DETAIL',  help='Print a more detailed description of program.')
     cmdparser.add_argument('-f', '--file',    action='store',      dest='FILE',    help='Input file paths as string, listing fastq.gz files w/ full path to process.',metavar='')
     cmdparser.add_argument('-i', '--wfid',    action='store',      dest='WFID',    help='WorkFlow ID is required.', metavar='')
-    cmdparser.add_argument('-r', '--reverse', action='store_true', dest='REVERSE', help='HTSeq -s reverse, for Biotech GEC data, optional.')
+    cmdparser.add_argument('-s', '--strand',  action='store',      dest='STRAND',  help='HTSeq-count -s <yes/no/reverse>, library prep strandedness.')
     cmdparser.add_argument('-ref', '--reference', action='store',  dest='REFERENCE', help='Reference R64 (SGD R64-1-1), R64-2 (SGD R64-2-1), Y22-3 (GLBRC), PAN (PanGenome)', metavar='')
     cmdparser.add_argument('-t', '--token', action='store',        dest='TOKEN',   help='Authentication token', metavar='' )
     cmdResults = vars(cmdparser.parse_args())
@@ -560,7 +557,7 @@ def main():
         print("\t-a  default aligner bowtie2, to use bwa : -a bwamem\n")
         print("\t-f  input file listing full path to fastq.gz files one per line\n")
         print("\t-i  GLOW WorkFlow ID number (required).\n")
-        print("\t-r  this will use \"-s reverse\" parameter for HTSeq.\n")
+        print("\t-s  set strandedness parameter for HTSeq <yes/no/reverse>.\n")
         print("\t-ref  change default reference, usage:  -ref Y22-3")
         print("\t-t  authentication token")
         print("\t    Current Reference List:")
@@ -587,8 +584,8 @@ def main():
         print("\t  sort bam: samtools sort input_bam sorted_Bam ")
         print("\t index bam: samtools index sorted_Bam\n")
         print("  6) HTSeq ")
-        print("\t/opt/bifxapps/python/bin/htseq-count -t CDS -i Parent inputFile Ref_gff")
-        print("\t -- if '-r' specfied -s reverse will be used as well\n")
+        print("\t/opt/bifxapps/python/bin/htseq-count -t CDS -i Parent -s <yes/no/reverse> inputFile Ref_gff")
+        print("\t -s set strandedness for HTSeq-count\n")
         print("  7) RPKM ")
         print("\t/home/GLBRCORG/mplace/bin/Normalize.jar dir Ref_gff RPKM.results --gene\n")
         print("  8) bam2wig.pl ")
@@ -830,12 +827,16 @@ def main():
     sortSamFile()
     # write index bam submit file
     indexBamFile()
-    # write HTSeq submit file
-    if cmdResults['REVERSE'] == 1:
-        strandedness = 1
+    # write HTSeq submit file, setting strand parameter
+    strand = cmdResults['STRAND'].lower()
+    if strand == 'yes' or strand == 'no' or strand == 'reverse':
+        htSeqFile(strand)        
     else:
-        strandedness = 0
-    htSeqFile(strandedness)
+        print("")
+        print("\t-s strand parameter missing or incorrect value, your choices:  yes, no, reverse")
+        cmdparser.print_help()
+        sys.exit(1)
+            
     # write FINAL node submit file
     # This will run RPKM and clean up the directory
     # and write results to GLOW
@@ -852,10 +853,8 @@ def main():
         log.write('Token     : %s\n' %(token))
         log.write('Submitter : %s\n' %(submitter))
         log.write('Directory : %s\n' %(newDir))
-        if strandedness:
-            log.write('Reverse   : TRUE\n')
-        else:
-            log.write('Reverse   : FALSE\n')          
+        log.write('Strand    : %s\n' %(strand))
+         
         log.write('Fastq list: \n')
         for f in fastq:
             log.write('%s\n' %(f))
