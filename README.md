@@ -141,4 +141,15 @@ rnaSeqCleanUp.py
             RPKM is run on all HTSeq files with results in RPKM.results file.
 
 ******************************************************************************
+HTseqReport.py 
 
+    Purpose: Create a simple report of HTSeq results.
+
+    Input  : none, just need to be in directory w/ HTseq results files
+             Files expected to end with _HTseqOutput.txt.gz 
+
+    Output : Single tab delimited report file, 4 colums, 
+    
+    filename    Total_Reads    Num_Reads_Aligned_to_Feature    %Aligned_to_Feature
+
+********************************************************************************                   
