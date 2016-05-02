@@ -87,18 +87,32 @@ def updateGLOW( submitter, rnaDir, wfID, token ):
     """
     Update the submitter's workflow on GLOW with the results of the pipeline.
     Currently only RPKM.results is copied over to GLOW.
-   
+    
+    Update GLOW with results file location   
     cmd = ['curl', '--cookie',  'cjar', '--data', 'workflow_xml=<workflow workflow_id="59"><datafile><name>RPKM.results</name>\
     <file_path>/mnt/bigdata/processed_data/mplace/RPKM.results</file_path><file_type>Gene-centric Counts</file_type><sub_type>RPKM</sub_type></datafile></workflow>',
            'https://glow-trunk.glbrc.org/upsert_workflow?glow_access_token=c1f3b8d2b8ab8126ad0df366f99a5570d2216b0b' ]
     output = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+
+    Update GLOW with job status (only completion at this point)
+    cmd = ['curl', '--cookie', 'cjar', '--data', 'workflow_xml=<workflow workflow_id="130"><completion_status>Complete<
+    /completion_status></workflow>',
+    'https://glow-trunk.glbrc.org/upsert_workflow?glow_access_token=9a487c01f23738141e7ace6cd1298cbc1c7f720c' ]
+
     """
     cmd = ['curl', '--cookie',  'cjar', '--data', 'workflow_xml=<workflow workflow_id="' + wfID + '"><datafile><name>RPKM.results</name>\
     <file_path>/mnt/bigdata/processed_data/' + submitter + '/' + rnaDir + '/RPKM.results</file_path><file_type>Gene-centric Counts</file_type><sub_type>RPKM</sub_type></datafile></workflow>',
            'https://glow-trunk.glbrc.org/upsert_workflow?glow_access_token=' + token ]
     output = subprocess.Popen( cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
     result1 = output[0].decode('utf-8')
-    result2 = output[1].decode('utf-8')    
+    result2 = output[1].decode('utf-8')
+
+    cmdStatus = ['curl', '--cookie', 'cjar', '--data', 'workflow_xml=<workflow workflow_id="' + wfID +'"><completion_status>Complete</completion_status></workflow>',
+    'https://glow-trunk.glbrc.org/upsert_workflow?glow_access_token=' + token ]
+    outputStatus = subprocess.Popen( cmdStatus, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    result3 = outputStatus[0].decode('utf-8')
+    result4 = outputStatus[1].decode('utf-8')    
+    
     with open('glow.log', 'w') as log:
         log.write("GLOW command:")
         log.write(' '.join(cmd))
@@ -106,6 +120,14 @@ def updateGLOW( submitter, rnaDir, wfID, token ):
         log.write(result1)
         log.write("\n")
         log.write(result2)
+        log.write("\n")
+        log.write(' '.join(cmdStatus))
+        log.write("\n")
+        log.write(result3)
+        log.write("\n")
+        log.write(result4)
+        log.write("\n")
+    log.close()
 
 def bam2wig( bamFile ):
     """
