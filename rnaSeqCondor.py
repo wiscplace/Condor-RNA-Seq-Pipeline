@@ -131,7 +131,7 @@ Make the BAM file, sort and index it
 samtools index $OUT.sorted.bam 
 
     on GLBRC scarcity:
-    /opt/bifxapps/bin/samtools
+    /opt/bifxapps/samtools-1.2/bin/samtools
     
     OUTPUT: sorted bam file and index for bam file
 *******************************************************************************
@@ -380,7 +380,7 @@ def samToBamFile():
     """
     with open('samToBam.jtf', 'w') as submit:
         submit.write( "Universe                 = vanilla\n" )
-        submit.write( "Executable               = /opt/bifxapps/bin/samtools\n" )
+        submit.write( "Executable               = /opt/bifxapps/samtools-1.2/bin/samtools\n" )
         submit.write( "getenv                   = True\n")
         submit.write( "Arguments                = view -bS -t $(reference) -o $(bam) $(sam)\n" )
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
@@ -401,7 +401,7 @@ def sortSamFile():
     """
     with open('sortSam.jtf', 'w') as submit:
         submit.write( "Universe                 = vanilla\n" )
-        submit.write( "Executable               = /opt/bifxapps/bin/samtools\n" )
+        submit.write( "Executable               = /opt/bifxapps/samtools-1.2/bin/samtools\n" )
         submit.write( "getenv                   = True\n")
         submit.write( "Arguments                = sort $(bam) $(out)\n" )
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
@@ -422,7 +422,7 @@ def indexBamFile():
     """
     with open('indexBam.jtf', 'w') as submit:
         submit.write( "Universe                 = vanilla\n" )
-        submit.write( "Executable               = /opt/bifxapps/bin/samtools\n" )
+        submit.write( "Executable               = /opt/bifxapps/samtools-1.2/bin/samtools\n" )
         submit.write( "getenv                   = True\n")
         submit.write( "Arguments                = index $(bam)\n" )
         submit.write( "Should_Transfer_Files    = IF_NEEDED\n" )
